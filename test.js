@@ -10,12 +10,11 @@ const main = (replicad) => {
     const discRadius = 125 / 2;
     const insetDistance = 10; // 10mm inset from edge
     const legPositionRadius = discRadius - insetDistance - legRadius;
-    // Center leg (5th leg) with filleted foot
+    // Center leg (5th leg) - create without fillet first
     const centerLeg = drawCircle(legRadius)
         .sketchOnPlane("XY", [0, 0, 8]) // Start at top of base disc
-        .extrude(legHeight)
-        .fillet(2); // Fillet the foot of the leg
-    // Create 4 outer legs positioned around the disc
+        .extrude(legHeight);
+    // Create 4 outer legs positioned around the disc - also without fillet first
     let result = baseDisc.fuse(centerLeg);
     // Position 4 legs evenly around the circle (90 degrees apart)
     for (let i = 0; i < 4; i++) {
@@ -24,13 +23,19 @@ const main = (replicad) => {
         const y = legPositionRadius * Math.sin(angle);
         const leg = drawCircle(legRadius)
             .sketchOnPlane("XY", [x, y, 8]) // Start at top of base disc
-            .extrude(legHeight)
-            .fillet(2); // Fillet the foot of the leg
+            .extrude(legHeight);
         result = result.fuse(leg);
     }
+    // Now fillet only the top edges of the legs (the feet)
+    // This requires using an EdgeFinder to select only the top circular edges
+    const { EdgeFinder } = replicad;
+    result = result.fillet(2, (edges) => edges.inPlane("XY", [0, 0, 30]) // Only edges at Z=30 (top of legs)
+    );
     // Add broader fillets at the joins between legs and disc
-    // This creates a smoother transition from the disc to the legs
-    //result = result.fillet(1); // Larger fillet for the joins
+    // Target edges at the base of the legs (where they meet the disc)
+    result = result.fillet(3, (edges) => edges.inPlane("XY", [0, 0, 8]) // Only edges at Z=8 (where legs meet disc)
+        .ofCurveType("CIRCLE") // Only circular edges (leg perimeters)
+    );
     return result;
 };
 //# sourceMappingURL=test.js.map

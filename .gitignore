@@ -43,8 +43,8 @@ lib/
 out/
 *.js.map
 
-# Compiled JavaScript files (if you want to exclude them)
-*.js
+# Compiled JavaScript files (allowing compiled output in place)
+# *.js  # Commented out to allow compiled JS files
 !*.config.js
 !jest.config.js
 !webpack.config.js

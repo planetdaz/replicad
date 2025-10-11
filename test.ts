@@ -2,49 +2,43 @@
 const main = (replicad: any) => {
     const { drawCircle } = replicad;
 
-    // Base disc: 125mm diameter, 8mm thick with 2mm fillet
-    const baseDisc = drawCircle(125 / 2).sketchOnPlane().extrude(8).fillet(2);
+    // Base disc: 129mm diameter (125 + 4mm for 2mm perimeter), 8mm thick with 2mm fillet
+    const discRadius = (125 + 4) / 2; // Add 4mm to diameter (2mm perimeter all around)
+    const baseDisc = drawCircle(discRadius).sketchOnPlane().extrude(8).fillet(2);
 
-    // Leg parameters
-    const legRadius = 15 / 2; // 15mm diameter cylinders
+    // Cross leg parameters
     const legHeight = 22; // 22mm tall legs
-    const discRadius = 125 / 2;
-    const insetDistance = 10; // 10mm inset from edge
-    const legPositionRadius = discRadius - insetDistance - legRadius;
+    const legWidth = 4; // 4mm wide rectangles
+    const crossLength = discRadius * 2; // Span from edge to edge
 
-    // Center leg (5th leg) - create without fillet first
-    const centerLeg = drawCircle(legRadius)
+    // Create cross legs using rectangles
+    const { drawRectangle } = replicad;
+
+    // First rectangle (horizontal): spans full diameter, 4mm wide
+    const horizontalLeg = drawRectangle(crossLength, legWidth)
         .sketchOnPlane("XY", [0, 0, 8]) // Start at top of base disc
         .extrude(legHeight);
 
-    // Create 4 outer legs positioned around the disc - also without fillet first
-    let result = baseDisc.fuse(centerLeg);
+    // Second rectangle (vertical): spans full diameter, 4mm wide, rotated 90 degrees
+    const verticalLeg = drawRectangle(legWidth, crossLength)
+        .sketchOnPlane("XY", [0, 0, 8]) // Start at top of base disc
+        .extrude(legHeight);
 
-    // Position 4 legs evenly around the circle (90 degrees apart)
-    for (let i = 0; i < 4; i++) {
-        const angle = (i * 90) * Math.PI / 180; // Convert to radians
-        const x = legPositionRadius * Math.cos(angle);
-        const y = legPositionRadius * Math.sin(angle);
+    // Fuse the base disc with both cross legs
+    let result = baseDisc.fuse(horizontalLeg).fuse(verticalLeg);
 
-        const leg = drawCircle(legRadius)
-            .sketchOnPlane("XY", [x, y, 8]) // Start at top of base disc
-            .extrude(legHeight);
-
-        result = result.fuse(leg);
-    }
-
-    // Now fillet only the top edges of the legs (the feet)
-    // This requires using an EdgeFinder to select only the top circular edges
+    // Now fillet the top edges of the cross legs (the feet)
+    // This targets the rectangular edges at the top of the cross
     const { EdgeFinder } = replicad;
     result = result.fillet(2, (edges: any) =>
         edges.inPlane("XY", [0, 0, 30]) // Only edges at Z=30 (top of legs)
     );
 
-    // Add broader fillets at the joins between legs and disc
-    // Target edges at the base of the legs (where they meet the disc)
+    // Add broader fillets at the joins between cross legs and disc
+    // Target edges at the base where the rectangles meet the disc
     result = result.fillet(3, (edges: any) =>
         edges.inPlane("XY", [0, 0, 8]) // Only edges at Z=8 (where legs meet disc)
-            .ofCurveType("CIRCLE") // Only circular edges (leg perimeters)
+            .ofCurveType("LINE") // Only straight edges (rectangle perimeters)
     );
 
     return result;

@@ -10,10 +10,11 @@ const main = (replicad) => {
     const discRadius = 125 / 2;
     const insetDistance = 10; // 10mm inset from edge
     const legPositionRadius = discRadius - insetDistance - legRadius;
-    // Center leg (5th leg)
+    // Center leg (5th leg) with filleted foot
     const centerLeg = drawCircle(legRadius)
         .sketchOnPlane("XY", [0, 0, 8]) // Start at top of base disc
-        .extrude(legHeight);
+        .extrude(legHeight)
+        .fillet(2); // Fillet the foot of the leg
     // Create 4 outer legs positioned around the disc
     let result = baseDisc.fuse(centerLeg);
     // Position 4 legs evenly around the circle (90 degrees apart)
@@ -23,9 +24,13 @@ const main = (replicad) => {
         const y = legPositionRadius * Math.sin(angle);
         const leg = drawCircle(legRadius)
             .sketchOnPlane("XY", [x, y, 8]) // Start at top of base disc
-            .extrude(legHeight);
+            .extrude(legHeight)
+            .fillet(2); // Fillet the foot of the leg
         result = result.fuse(leg);
     }
+    // Add broader fillets at the joins between legs and disc
+    // This creates a smoother transition from the disc to the legs
+    //result = result.fillet(1); // Larger fillet for the joins
     return result;
 };
 //# sourceMappingURL=test.js.map

@@ -3,18 +3,22 @@
 const main = (replicad) => {
     const { draw } = replicad;
     // Custom hexagon with specific dimensions
-    // Two opposite sides: 120mm each
+    // Two opposite sides: 120mm each (top and bottom)
     // Four other sides: 42.43mm each
-    // All angles: 120° (equal angles)
+    // Width at widest point (where short sides meet): 180mm
+    // Calculate coordinates based on constraints
+    const longSide = 120;
+    const shortSide = 42.43;
+    const maxWidth = 180;
     // Pre-calculated coordinates for the hexagon vertices
     // Starting from bottom left, going clockwise
     const points = [
-        [-60, 0], // Bottom left of long side
+        [-60, 0], // Bottom left of long side (120mm / 2 = 60)
         [60, 0], // Bottom right of long side
-        [81.215, 36.74], // Right bottom vertex
+        [90, 36.74], // Right bottom vertex (180mm / 2 = 90)
         [60, 73.48], // Right top vertex
         [-60, 73.48], // Left top vertex
-        [-81.215, 36.74] // Left bottom vertex
+        [-90, 36.74] // Left bottom vertex (-180mm / 2 = -90)
     ];
     // Create the hexagon using drawing pen
     let hexagon = draw(points[0]);

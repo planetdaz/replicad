@@ -26,7 +26,7 @@ const main = (replicad: any) => {
     }
 
     // Close the shape, convert to face, and extrude to 2mm
-    const result = hexagon.close().sketchOnPlane().extrude(2);
+    const result = hexagon.close().sketchOnPlane().extrude(1);
 
     return result;
 };

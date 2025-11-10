@@ -1,39 +1,35 @@
 // For replicad studio: main function receives the replicad library
 const main = (replicad: any) => {
-    const { drawCircle, drawRectangle } = replicad;
+    const { draw } = replicad;
 
-    // Base disc: 129mm diameter, 8mm thick with fillet
-    const discRadius = (125 + 4) / 2;
-    const baseDisc = drawCircle(discRadius).sketchOnPlane().extrude(8).fillet(2);
+    // Custom hexagon with specific dimensions
+    // Two opposite sides: 120mm each
+    // Four other sides: 42.43mm each
+    // All angles: 120° (equal angles)
 
-    // Cross legs - two rectangles forming a plus, pulled back 8mm from edge
-    const legHeight = 22;
-    const legWidth = 4;
-    const crossLength = (discRadius * 2) - (8 * 2); // Pull back 8mm from each end
+    const longSide = 120;
+    const shortSide = 42.43;
 
-    // First rectangle (horizontal)
-    const horizontalLeg = drawRectangle(crossLength, legWidth)
-        .sketchOnPlane("XY", [0, 0, 8])
-        .extrude(legHeight);
+    // Calculate hexagon points with equal 120° angles
+    // Starting from bottom center, going clockwise
+    const points = [
+        [0, 0], // Start point (bottom center of long side)
+        [longSide, 0], // End of first long side (bottom)
+        [longSide + shortSide * Math.cos(Math.PI / 3), shortSide * Math.sin(Math.PI / 3)], // First short side
+        [longSide + shortSide * Math.cos(Math.PI / 3) - longSide * Math.cos(Math.PI / 3), shortSide * Math.sin(Math.PI / 3) + longSide * Math.sin(Math.PI / 3)], // Second short side
+        [-longSide * Math.cos(Math.PI / 3), longSide * Math.sin(Math.PI / 3)], // Top long side start
+        [-shortSide * Math.cos(Math.PI / 3), shortSide * Math.sin(Math.PI / 3)], // Third short side
+    ];
 
-    // Second rectangle (vertical)
-    const verticalLeg = drawRectangle(legWidth, crossLength)
-        .sketchOnPlane("XY", [0, 0, 8])
-        .extrude(legHeight);
+    // Create the hexagon using drawing pen
+    let hexagon = draw([points[0][0], points[0][1]]);
 
-    // Fuse all parts together
-    let result = baseDisc.fuse(horizontalLeg);
-    result = result.fuse(verticalLeg);
+    for (let i = 1; i < points.length; i++) {
+        hexagon = hexagon.lineTo([points[i][0], points[i][1]]);
+    }
 
-    // Add selective fillet for flare effect at the joins only
-    // Target edges where the legs meet the disc (not the outer edges)
-    // const { EdgeFinder } = replicad;
-    // result = result.fillet(3, (edges: any) =>
-    //     edges.inPlane("XY", [0, 0, 8]) // Edges at the base level
-    //         .ofCurveType("LINE") // Only straight edges (rectangle perimeters)
-    //         .not((e: any) => e.inDirection([1, 0, 0])) // Exclude edges parallel to X axis
-    //         .not((e: any) => e.inDirection([0, 1, 0])) // Exclude edges parallel to Y axis
-    // );
+    // Close the shape and extrude to 2mm
+    const result = hexagon.close().extrude(2);
 
     return result;
 };

@@ -1,34 +1,28 @@
 "use strict";
 // For replicad studio: main function receives the replicad library
 const main = (replicad) => {
-    const { drawCircle, drawRectangle } = replicad;
-    // Base disc: 129mm diameter, 8mm thick with fillet
-    const discRadius = (125 + 4) / 2;
-    const baseDisc = drawCircle(discRadius).sketchOnPlane().extrude(8).fillet(2);
-    // Cross legs - two rectangles forming a plus, pulled back 8mm from edge
-    const legHeight = 22;
-    const legWidth = 4;
-    const crossLength = (discRadius * 2) - (8 * 2); // Pull back 8mm from each end
-    // First rectangle (horizontal)
-    const horizontalLeg = drawRectangle(crossLength, legWidth)
-        .sketchOnPlane("XY", [0, 0, 8])
-        .extrude(legHeight);
-    // Second rectangle (vertical)
-    const verticalLeg = drawRectangle(legWidth, crossLength)
-        .sketchOnPlane("XY", [0, 0, 8])
-        .extrude(legHeight);
-    // Fuse all parts together
-    let result = baseDisc.fuse(horizontalLeg);
-    result = result.fuse(verticalLeg);
-    // Add selective fillet for flare effect at the joins only
-    // Target edges where the legs meet the disc (not the outer edges)
-    // const { EdgeFinder } = replicad;
-    // result = result.fillet(3, (edges: any) =>
-    //     edges.inPlane("XY", [0, 0, 8]) // Edges at the base level
-    //         .ofCurveType("LINE") // Only straight edges (rectangle perimeters)
-    //         .not((e: any) => e.inDirection([1, 0, 0])) // Exclude edges parallel to X axis
-    //         .not((e: any) => e.inDirection([0, 1, 0])) // Exclude edges parallel to Y axis
-    // );
+    const { draw } = replicad;
+    // Custom hexagon with specific dimensions
+    // Two opposite sides: 120mm each
+    // Four other sides: 42.43mm each
+    // All angles: 120° (equal angles)
+    // Pre-calculated coordinates for the hexagon vertices
+    // Starting from bottom left, going clockwise
+    const points = [
+        [-60, 0], // Bottom left of long side
+        [60, 0], // Bottom right of long side
+        [81.215, 36.74], // Right bottom vertex
+        [60, 73.48], // Right top vertex
+        [-60, 73.48], // Left top vertex
+        [-81.215, 36.74] // Left bottom vertex
+    ];
+    // Create the hexagon using drawing pen
+    let hexagon = draw(points[0]);
+    for (let i = 1; i < points.length; i++) {
+        hexagon = hexagon.lineTo(points[i]);
+    }
+    // Close the shape, convert to face, and extrude to 2mm
+    const result = hexagon.close().sketchOnPlane().extrude(2);
     return result;
 };
 //# sourceMappingURL=test.js.map

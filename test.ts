@@ -7,29 +7,26 @@ const main = (replicad: any) => {
     // Four other sides: 42.43mm each
     // All angles: 120° (equal angles)
 
-    const longSide = 120;
-    const shortSide = 42.43;
-
-    // Calculate hexagon points with equal 120° angles
-    // Starting from bottom center, going clockwise
+    // Pre-calculated coordinates for the hexagon vertices
+    // Starting from bottom left, going clockwise
     const points = [
-        [0, 0], // Start point (bottom center of long side)
-        [longSide, 0], // End of first long side (bottom)
-        [longSide + shortSide * Math.cos(Math.PI / 3), shortSide * Math.sin(Math.PI / 3)], // First short side
-        [longSide + shortSide * Math.cos(Math.PI / 3) - longSide * Math.cos(Math.PI / 3), shortSide * Math.sin(Math.PI / 3) + longSide * Math.sin(Math.PI / 3)], // Second short side
-        [-longSide * Math.cos(Math.PI / 3), longSide * Math.sin(Math.PI / 3)], // Top long side start
-        [-shortSide * Math.cos(Math.PI / 3), shortSide * Math.sin(Math.PI / 3)], // Third short side
+        [-60, 0],           // Bottom left of long side
+        [60, 0],            // Bottom right of long side
+        [81.215, 36.74],    // Right bottom vertex
+        [60, 73.48],        // Right top vertex
+        [-60, 73.48],       // Left top vertex
+        [-81.215, 36.74]    // Left bottom vertex
     ];
 
     // Create the hexagon using drawing pen
-    let hexagon = draw([points[0][0], points[0][1]]);
+    let hexagon = draw(points[0]);
 
     for (let i = 1; i < points.length; i++) {
-        hexagon = hexagon.lineTo([points[i][0], points[i][1]]);
+        hexagon = hexagon.lineTo(points[i]);
     }
 
-    // Close the shape and extrude to 2mm
-    const result = hexagon.close().extrude(2);
+    // Close the shape, convert to face, and extrude to 2mm
+    const result = hexagon.close().sketchOnPlane().extrude(2);
 
     return result;
 };

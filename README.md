@@ -8,11 +8,9 @@ A local 3D viewer for creating and viewing [Replicad](https://replicad.xyz/) mod
 # Install dependencies
 npm install
 
-# Start the viewer
+# Start the viewer (automatically opens in browser)
 npm run viewer
 ```
-
-Then open your browser to **http://localhost:5173/**
 
 ## 🎨 Features
 

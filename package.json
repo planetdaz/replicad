@@ -6,7 +6,7 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "viewer": "vite"
+    "viewer": "vite --open"
   },
   "dependencies": {
     "replicad": "^0.20.2",

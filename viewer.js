@@ -12,6 +12,13 @@ const modelDescription = document.getElementById('modelDescription');
 let currentModelMeshes = [];
 let availableModels = [];
 
+// Storage keys
+const STORAGE_KEYS = {
+    SELECTED_MODEL: 'replicad-viewer-selected-model',
+    CAMERA_POSITION: 'replicad-viewer-camera-position',
+    CAMERA_TARGET: 'replicad-viewer-camera-target'
+};
+
 // Set up Three.js scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a1a);
@@ -91,6 +98,11 @@ function createMeshFromData(meshData) {
 
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
+
+    // Rotate mesh so it lies flat on the XY plane (like a 3D printer bed)
+    // Replicad extrudes in Z, but we want models to sit on the grid
+    mesh.rotation.x = -Math.PI / 2; // Rotate -90 degrees around X axis
+
     return mesh;
 }
 
@@ -117,12 +129,20 @@ worker.addEventListener('message', (event) => {
             modelSelect.appendChild(option);
         });
 
-        // Select the first model by default
-        if (models.length > 0) {
-            modelSelect.value = models[0].id;
-            modelDescription.textContent = models[0].description;
-            // Load the first model
-            loadModel(models[0].id);
+        // Try to restore previously selected model, or use first model
+        const savedModelId = sessionStorage.getItem(STORAGE_KEYS.SELECTED_MODEL);
+        const modelToLoad = savedModelId && models.find(m => m.id === savedModelId)
+            ? savedModelId
+            : models[0]?.id;
+
+        if (modelToLoad) {
+            modelSelect.value = modelToLoad;
+            const model = models.find(m => m.id === modelToLoad);
+            if (model) {
+                modelDescription.textContent = model.description;
+            }
+            // Load the model
+            loadModel(modelToLoad);
         }
 
     } else if (type === 'MODEL_READY') {
@@ -143,21 +163,34 @@ worker.addEventListener('message', (event) => {
             currentModelMeshes.push(mesh);
         });
 
-        // Center camera on model
-        const box = new THREE.Box3();
-        currentModelMeshes.forEach(mesh => box.expandByObject(mesh));
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+        // Try to restore saved camera position
+        const savedPosition = sessionStorage.getItem(STORAGE_KEYS.CAMERA_POSITION);
+        const savedTarget = sessionStorage.getItem(STORAGE_KEYS.CAMERA_TARGET);
 
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-        cameraZ *= 2.5; // Zoom out a bit
+        if (savedPosition && savedTarget) {
+            // Restore saved camera position
+            const pos = JSON.parse(savedPosition);
+            const target = JSON.parse(savedTarget);
+            camera.position.set(pos.x, pos.y, pos.z);
+            controls.target.set(target.x, target.y, target.z);
+            controls.update();
+        } else {
+            // Center camera on model (first time only)
+            const box = new THREE.Box3();
+            currentModelMeshes.forEach(mesh => box.expandByObject(mesh));
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
 
-        camera.position.set(center.x + cameraZ, center.y + cameraZ, center.z + cameraZ);
-        camera.lookAt(center);
-        controls.target.copy(center);
-        controls.update();
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = camera.fov * (Math.PI / 180);
+            let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+            cameraZ *= 2.5; // Zoom out a bit
+
+            camera.position.set(center.x + cameraZ, center.y + cameraZ, center.z + cameraZ);
+            camera.lookAt(center);
+            controls.target.copy(center);
+            controls.update();
+        }
 
     } else if (type === 'ERROR') {
         updateStatus(`Error: ${error}`, 'error');
@@ -180,6 +213,9 @@ function loadModel(modelId) {
 modelSelect.addEventListener('change', (event) => {
     const selectedModelId = event.target.value;
 
+    // Save selected model
+    sessionStorage.setItem(STORAGE_KEYS.SELECTED_MODEL, selectedModelId);
+
     // Update description
     const model = availableModels.find(m => m.id === selectedModelId);
     if (model) {
@@ -187,6 +223,24 @@ modelSelect.addEventListener('change', (event) => {
         // Load the selected model
         loadModel(selectedModelId);
     }
+});
+
+// Save camera position periodically
+let saveTimeout;
+controls.addEventListener('change', () => {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        sessionStorage.setItem(STORAGE_KEYS.CAMERA_POSITION, JSON.stringify({
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z
+        }));
+        sessionStorage.setItem(STORAGE_KEYS.CAMERA_TARGET, JSON.stringify({
+            x: controls.target.x,
+            y: controls.target.y,
+            z: controls.target.z
+        }));
+    }, 100);
 });
 
 // Request list of models first

@@ -1,5 +1,5 @@
 // For replicad studio: main function receives the replicad library
-const main = (replicad: any) => {
+const mainTest = (replicad: any) => {
     const { draw } = replicad;
 
     // Custom hexagon: 120x60 rectangle with triangular extensions

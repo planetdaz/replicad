@@ -1,6 +1,6 @@
 "use strict";
 // For replicad studio: main function receives the replicad library
-const main = (replicad) => {
+const mainTest = (replicad) => {
     const { draw } = replicad;
     // Custom hexagon: 120x60 rectangle with triangular extensions
     // Rectangle: 120mm wide x 60mm tall

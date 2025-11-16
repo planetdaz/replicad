@@ -66,7 +66,7 @@ Add an entry to `models/index.json`:
 
 ### 3. Done!
 
-The viewer will automatically pick up the new model. See `models/README.md` for more details and examples.
+The viewer will automatically pick up the new model and add it to the dropdown selector.
 
 
 ## 📁 Project Structure
@@ -79,8 +79,7 @@ replicad/
 ├── models/             # Directory containing all model files
 │   ├── index.json      # Registry of all available models
 │   ├── vent-ring.js    # Example: Vent ring model
-│   ├── hexagon.js      # Example: Hexagon model
-│   └── README.md       # Detailed guide for adding models
+│   └── hexagon.js      # Example: Hexagon model
 ├── package.json        # Dependencies and scripts
 └── README.md           # This file
 ```

@@ -2,13 +2,13 @@
     {
         "id": "vent-ring",
         "name": "Vent Ring",
-        "description": "Ring/cylinder (48.2mm outer, 46.4mm inner, 5mm height)",
+        "description": "Ring/cylinder (48.2mm outer, 46.4mm inner, 5mm height) - Made to help snug a vent cover fitting",
         "file": "./vent-ring.js"
     },
     {
         "id": "hexagon",
         "name": "Custom Hexagon",
-        "description": "Hexagon (120mm x 60mm with triangular extensions)",
+        "description": "Hexagon (120mm x 60mm x 1mm with triangular extensions)",
         "file": "./hexagon.js"
     }
 ]

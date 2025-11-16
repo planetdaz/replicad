@@ -1,16 +1,19 @@
 {
-  "name": "replicad-test",
+  "name": "replicad-viewer",
   "version": "1.0.0",
-  "description": "",
+  "description": "Local 3D viewer for Replicad models with interactive controls and STL export",
   "license": "ISC",
   "author": "",
   "type": "module",
-  "main": "test.js",
   "scripts": {
-    "watch": "tsc --watch"
+    "viewer": "vite --open"
   },
   "dependencies": {
     "replicad": "^0.20.2",
-    "typescript": "^5.9.3"
+    "replicad-opencascadejs": "^0.20.2",
+    "three": "^0.181.1"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2"
   }
 }

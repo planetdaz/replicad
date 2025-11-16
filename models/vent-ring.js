@@ -1,5 +1,7 @@
-// For replicad studio: main function receives the replicad library
-const main = (replicad: any) => {
+// Vent Ring Model
+// Ring/cylinder (48.2mm outer, 46.4mm inner, 5mm height)
+
+export default async function build(replicad) {
     const { drawCircle } = replicad;
 
     // Vent ring dimensions
@@ -21,4 +23,5 @@ const main = (replicad: any) => {
     const result = outerCylinder.cut(innerCylinder);
 
     return result;
-};
+}
+

@@ -1,12 +1,14 @@
 // Main viewer script
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 
 // Get DOM elements
 const canvas = document.getElementById('canvas');
 const statusEl = document.getElementById('status');
 const modelSelect = document.getElementById('modelSelect');
 const modelDescription = document.getElementById('modelDescription');
+const exportButton = document.getElementById('exportSTL');
 
 // Track current model meshes
 let currentModelMeshes = [];
@@ -262,5 +264,57 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight - 60);
+});
+
+// Export STL functionality
+exportButton.addEventListener('click', () => {
+    if (currentModelMeshes.length === 0) {
+        alert('No model loaded to export');
+        return;
+    }
+
+    try {
+        // Create a temporary group to hold the meshes in their original orientation
+        const exportGroup = new THREE.Group();
+
+        // Clone each mesh and undo the rotation for export
+        currentModelMeshes.forEach(mesh => {
+            const clonedMesh = mesh.clone();
+            // Undo the -90 degree rotation so STL is in original orientation
+            clonedMesh.rotation.x = Math.PI / 2;
+            // Remove edge lines from the clone (only export the solid geometry)
+            clonedMesh.children = [];
+            exportGroup.add(clonedMesh);
+        });
+
+        // Export to STL
+        const exporter = new STLExporter();
+        const stlString = exporter.parse(exportGroup, { binary: false });
+
+        // Create download link
+        const blob = new Blob([stlString], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+
+        // Get current model name for filename
+        const selectedModel = availableModels.find(m => m.id === modelSelect.value);
+        const filename = selectedModel ? `${selectedModel.id}.stl` : 'model.stl';
+        link.download = filename;
+
+        // Trigger download
+        link.click();
+
+        // Clean up
+        URL.revokeObjectURL(link.href);
+
+        updateStatus('STL exported successfully!', 'ready');
+        setTimeout(() => {
+            updateStatus('Model loaded successfully!', 'ready');
+        }, 2000);
+
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Failed to export STL: ' + error.message);
+    }
 });
 

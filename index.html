@@ -41,6 +41,37 @@
             gap: 1rem;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .export-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .export-button:hover {
+            background: #357abd;
+        }
+
+        .export-button:active {
+            background: #2868a8;
+        }
+
+        .export-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
         .model-selector {
             display: flex;
             flex-direction: column;
@@ -155,7 +186,10 @@
                     <div id="modelDescription" class="model-description"></div>
                 </div>
             </div>
-            <div id="status" class="loading">Initializing...</div>
+            <div class="header-right">
+                <button id="exportSTL" class="export-button">📥 Export STL</button>
+                <div id="status" class="loading">Initializing...</div>
+            </div>
         </div>
         <div id="viewer">
             <canvas id="canvas"></canvas>

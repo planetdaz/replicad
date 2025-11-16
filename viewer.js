@@ -89,19 +89,18 @@ function createMeshFromData(meshData) {
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Rotate mesh so it lies flat on the XY plane (like a 3D printer bed)
-    // Replicad extrudes in Z, but we want models to sit on the grid
-    mesh.rotation.x = -Math.PI / 2; // Rotate -90 degrees around X axis
-
-    // Add edge lines for CAD-style outline
+    // Add edge lines for CAD-style outline (before rotation)
     const edges = new THREE.EdgesGeometry(geometry, 15); // 15 degree threshold for edges
     const lineMaterial = new THREE.LineBasicMaterial({
         color: 0x000000,
         linewidth: 1
     });
     const edgeLines = new THREE.LineSegments(edges, lineMaterial);
-    edgeLines.rotation.x = -Math.PI / 2; // Match mesh rotation
-    mesh.add(edgeLines);
+    mesh.add(edgeLines); // Add as child so it rotates with the mesh
+
+    // Rotate mesh so it lies flat on the XY plane (like a 3D printer bed)
+    // Replicad extrudes in Z, but we want models to sit on the grid
+    mesh.rotation.x = -Math.PI / 2; // Rotate -90 degrees around X axis
 
     return mesh;
 }

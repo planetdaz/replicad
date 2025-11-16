@@ -66,9 +66,7 @@ const main = (replicad: any) => {
 ## 🔧 Available Scripts
 
 ```bash
-npm run build    # One-time compilation
-npm run watch    # Auto-compile on file changes (recommended)
-npm run dev      # Alias for watch mode
+npm run watch    # Auto-compile on file changes
 ```
 
 ## 🎨 Example Models

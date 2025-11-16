@@ -3,8 +3,8 @@
 const main = (replicad) => {
     const { drawCircle } = replicad;
     // Vent ring dimensions
-    const outerDiameter = 47.9;
-    const innerDiameter = 46.1;
+    const outerDiameter = 48.2;
+    const innerDiameter = 46.4;
     const height = 5;
     // Calculate radii
     const outerRadius = outerDiameter / 2;

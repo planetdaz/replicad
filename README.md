@@ -106,13 +106,6 @@ const main = (replicad: any) => {
 };
 ```
 
-## 🚀 Future Improvements
-
-- **Local Replicad Server** - Run Replicad locally in VS Code as a hosted Node.js app
-- **Direct STL Export** - Export STL files directly without online tools
-- **Multiple Model Management** - Better workflow for managing multiple models
-- **AI-Assisted Design** - Use AI agents to quickly describe shapes in English and generate code
-
 ## 🤖 AI-Assisted Workflow
 
 The beauty of this approach is that you can describe shapes in plain English to an AI assistant, and it can generate the TypeScript code for you. For example:

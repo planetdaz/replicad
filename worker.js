@@ -2,7 +2,7 @@
 import opencascade from 'replicad-opencascadejs/src/replicad_single.js';
 import opencascadeWasm from 'replicad-opencascadejs/src/replicad_single.wasm?url';
 import { setOC } from 'replicad';
-import { models } from './models.js';
+import modelsIndex from './models/index.json';
 
 let initialized = false;
 
@@ -21,16 +21,20 @@ async function init() {
 // Build a model by ID
 async function buildModel(modelId) {
     // Find the model in the registry
-    const modelConfig = models.find(m => m.id === modelId);
+    const modelConfig = modelsIndex.find(m => m.id === modelId);
     if (!modelConfig) {
         throw new Error(`Model "${modelId}" not found`);
     }
+
+    // Dynamically import the model's build function
+    const modelModule = await import(`./models/${modelId}.js`);
+    const buildFunction = modelModule.default;
 
     // Import replicad
     const replicad = await import('replicad');
 
     // Call the model's build function
-    const result = await modelConfig.buildFunction(replicad);
+    const result = await buildFunction(replicad);
 
     return result;
 }
@@ -82,10 +86,10 @@ self.addEventListener('message', async (event) => {
                 modelId: modelId
             });
         } else if (type === 'GET_MODELS') {
-            // Send the list of available models
+            // Send the list of available models from the index
             self.postMessage({
                 type: 'MODELS_LIST',
-                models: models.map(m => ({
+                models: modelsIndex.map(m => ({
                     id: m.id,
                     name: m.name,
                     description: m.description

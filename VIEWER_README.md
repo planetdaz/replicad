@@ -24,63 +24,63 @@ Then open your browser to **http://localhost:5173/**
 
 ## ➕ Adding New Models
 
-To add a new model to the viewer, edit `models.js`:
+Models are organized in the `models/` directory. Each model has its own file.
+
+### 1. Create a new model file
+
+Create a new `.js` file in the `models/` directory (e.g., `models/my-model.js`):
 
 ```javascript
-export const models = [
-    // ... existing models ...
-    {
-        id: 'my-new-model',  // Unique identifier
-        name: 'My New Model',  // Display name in dropdown
-        description: 'Description shown below dropdown',
-        buildFunction: async (replicad) => {
-            // Import the functions you need from replicad
-            const { drawCircle, draw } = replicad;
-            
-            // Your model code here
-            const shape = drawCircle(10).sketchOnPlane().extrude(5);
-            
-            // Return the final shape
-            return shape;
-        }
-    }
-];
-```
+// My Model
+// Brief description
 
-### Example: Adding a Simple Box
+export default async function build(replicad) {
+    const { drawCircle } = replicad;
 
-```javascript
-{
-    id: 'simple-box',
-    name: 'Simple Box',
-    description: 'A 10x10x10mm cube',
-    buildFunction: async (replicad) => {
-        const { drawRectangle } = replicad;
-        
-        const box = drawRectangle(10, 10)
-            .sketchOnPlane()
-            .extrude(10);
-        
-        return box;
-    }
+    // Your model code here
+    const shape = drawCircle(10).sketchOnPlane().extrude(5);
+
+    return shape;
 }
 ```
+
+### 2. Register in `models/index.json`
+
+Add an entry to `models/index.json`:
+
+```json
+{
+    "id": "my-model",
+    "name": "My Model",
+    "description": "Brief description shown in the viewer",
+    "file": "./my-model.js"
+}
+```
+
+**Note:** The `id` must match the filename (without `.js`).
+
+### 3. Done!
+
+The viewer will automatically pick up the new model. See `models/README.md` for more details.
 
 ## 📁 File Structure
 
 - **`index.html`** - Main HTML page with UI
 - **`viewer.js`** - Main viewer script (Three.js setup, camera, controls)
 - **`worker.js`** - Web worker for model computation (runs OpenCascade)
-- **`models.js`** - Registry of all available models
-- **`vent-ring.ts`** - Original TypeScript source for vent ring
-- **`test.ts`** - Original TypeScript source for hexagon
+- **`models/`** - Directory containing all model files
+  - **`index.json`** - Registry of all available models
+  - **`vent-ring.js`** - Vent ring model
+  - **`hexagon.js`** - Hexagon model
+  - **`README.md`** - Guide for adding new models
 
 ## 🔧 How It Works
 
-1. **Model Registry**: All models are defined in `models.js` with their build functions
-2. **Web Worker**: Model computation runs in a separate thread to keep UI responsive
-3. **OpenCascade**: The replicad library uses OpenCascade.js (WebAssembly) for CAD operations
-4. **Three.js**: Renders the computed mesh in an interactive 3D scene
+1. **Model Registry**: Models are organized in `models/` directory with `index.json` as the registry
+2. **Dynamic Loading**: Model files are loaded on-demand when selected
+3. **Web Worker**: Model computation runs in a separate thread to keep UI responsive
+4. **OpenCascade**: The replicad library uses OpenCascade.js (WebAssembly) for CAD operations
+5. **Three.js**: Renders the computed mesh in an interactive 3D scene
 
 ## 💡 Tips
 

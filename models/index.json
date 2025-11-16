@@ -1,0 +1,15 @@
+[
+    {
+        "id": "vent-ring",
+        "name": "Vent Ring",
+        "description": "Ring/cylinder (48.2mm outer, 46.4mm inner, 5mm height)",
+        "file": "./vent-ring.js"
+    },
+    {
+        "id": "hexagon",
+        "name": "Custom Hexagon",
+        "description": "Hexagon (120mm x 60mm with triangular extensions)",
+        "file": "./hexagon.js"
+    }
+]
+

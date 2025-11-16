@@ -19,7 +19,7 @@ export default async function build(replicad) {
     const bars = [
         {
             enabled: true,
-            yOffset: 35,         // Distance from bottom wall (mm)
+            yOffset: 65,         // Distance from bottom wall (mm)
             width: 5,          // Width in Y direction (mm)
             height: 10,         // Height in Z direction (mm)
             cutoutDiameter: 14, // Diameter of cylinder cutouts (mm)
@@ -196,15 +196,22 @@ export default async function build(replicad) {
             const cutoutXPos = -(interiorWidth / 2) + sideMargin + cutoutRadius +
                 (i * (barConfig.cutoutDiameter + barConfig.cutoutSpacing));
 
-            // Create a cylinder lying horizontally along Y axis, positioned at bar height
-            // The cylinder center should be at the top of the bar so it cuts a half-circle groove
-            const cylinderCenterZ = barZSize;  // At the top of the bar
-
+            // Create a cylinder lying horizontally along Y axis
+            // NOTE: extruding a sketch on the XZ plane goes in the NEGATIVE Y direction
+            //      so the cylinder spans Y from (cylinderY - cylinderLength) to cylinderY
+            const cylinderLength = barYSize * 2; // 2x bar width so it fully passes through
             const cylinder = drawCircle(cutoutRadius)
-                .sketchOnPlane("XZ", [cutoutXPos, 0, cylinderCenterZ])
-                .extrude(barYSize + 2);  // Extrude along Y axis
+                .sketchOnPlane("XZ")
+                .extrude(cylinderLength);
 
-            bar = bar.cut(cylinder.translate([0, barYPos - (barYSize / 2) - 1, 0]));
+            // Position the cylinder so its CENTER in Y matches the bar center (barYPos)
+            // Center of cylinder in Y is: cylinderY - cylinderLength / 2
+            // => set cylinderY = barYPos + cylinderLength / 2
+            const cylinderX = barXPos + cutoutXPos;
+            const cylinderY = barYPos + cylinderLength / 2;
+            const cylinderZ = barZPos + barZSize;  // At the top of the bar
+
+            bar = bar.cut(cylinder.translate([cylinderX, cylinderY, cylinderZ]));
         }
 
         return bar;

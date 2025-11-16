@@ -6,8 +6,8 @@ export default async function build(replicad) {
 
     // Configurable parameters
     const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
-    const ySize = 4;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 2.5;       // Height in gridfinity units (1 unit = 7mm)
+    const ySize = 3;        // Number of gridfinity units in Y direction (1 unit = 42mm)
+    const height = 3;       // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;

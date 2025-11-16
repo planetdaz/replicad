@@ -5,9 +5,9 @@ export default async function build(replicad) {
     const { draw, drawRoundedRectangle, drawCircle, makeSolid, assembleWire, makeFace, EdgeFinder } = replicad;
 
     // Configurable parameters
-    const xSize = 3;        // Number of gridfinity units in X direction
-    const ySize = 2;        // Number of gridfinity units in Y direction
-    const height = 0.5;     // Height in gridfinity units (1 unit = 42mm)
+    const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
+    const ySize = 1;        // Number of gridfinity units in Y direction (1 unit = 42mm)
+    const height = 6;       // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -16,7 +16,8 @@ export default async function build(replicad) {
     const screwRadius = 1.5;
 
     // Gridfinity magic numbers
-    const SIZE = 42.0;
+    const SIZE = 42.0;              // X/Y unit size in mm
+    const HEIGHT_UNIT = 7.0;        // Height unit size in mm
     const CLEARANCE = 0.5;
     const AXIS_CLEARANCE = (CLEARANCE * Math.sqrt(2)) / 4;
     const CORNER_RADIUS = 4;
@@ -130,7 +131,7 @@ export default async function build(replicad) {
     };
 
     // Main build logic
-    const stdHeight = height * SIZE;
+    const stdHeight = height * HEIGHT_UNIT;
     let box = drawRoundedRectangle(
         xSize * SIZE - CLEARANCE,
         ySize * SIZE - CLEARANCE,

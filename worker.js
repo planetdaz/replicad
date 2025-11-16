@@ -68,9 +68,10 @@ self.addEventListener('message', async (event) => {
             const shape = await buildModel(modelId);
 
             // Export to STL using replicad's native export
+            // Using higher resolution for smoother curves (lower tolerance values)
             const stlBlob = shape.blobSTL({
-                tolerance: 0.1,
-                angularTolerance: 30,
+                tolerance: 0.01,      // 10x finer than viewer (was 0.1)
+                angularTolerance: 10, // 3x finer than viewer (was 30)
                 binary: false
             });
 

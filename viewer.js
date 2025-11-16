@@ -54,8 +54,10 @@ scene.add(ambientLight);
 const gridHelper = new THREE.GridHelper(100, 20, 0x888888, 0xcccccc);
 scene.add(gridHelper);
 
-// Axes helper
+// Axes helper - rotate to match model orientation
+// Red=X, Green=Y, Blue=Z
 const axesHelper = new THREE.AxesHelper(30);
+axesHelper.rotation.x = -Math.PI / 2; // Rotate to match model orientation
 scene.add(axesHelper);
 
 // Update status

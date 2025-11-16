@@ -7,7 +7,7 @@ export default async function build(replicad) {
     // Configurable parameters
     const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
     const ySize = 4;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 6;       // Height in gridfinity units (1 unit = 7mm)
+    const height = 4;       // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -19,21 +19,21 @@ export default async function build(replicad) {
     const bars = [
         {
             enabled: true,
-            yOffset: 65,         // Distance from bottom wall (mm)
-            width: 5,          // Width in Y direction (mm)
+            yOffset: 20,         // Distance from bottom wall (mm)
+            width: 20,          // Width in Y direction (mm)
             height: 10,         // Height in Z direction (mm)
             cutoutDiameter: 14, // Diameter of cylinder cutouts (mm)
             cutoutQty: 4,       // Number of cylinder cutouts
             cutoutSpacing: 2    // Spacing between cutouts (mm)
         },
         {
-            enabled: false,
-            yOffset: 25,
-            width: 10,
-            height: 15,
-            cutoutDiameter: 10,
-            cutoutQty: 3,
-            cutoutSpacing: 2
+            enabled: true,
+            yOffset: 70,
+            width: 6,
+            height: 10,
+            cutoutDiameter: 5,
+            cutoutQty: 4,
+            cutoutSpacing: 10
         },
         {
             enabled: false,

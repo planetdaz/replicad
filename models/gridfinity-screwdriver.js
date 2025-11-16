@@ -179,10 +179,10 @@ export default async function build(replicad) {
         const barYSize = barConfig.width;
         const barZSize = barConfig.height;
 
-        // Position: centered in X, offset from bottom wall in Y
+        // Position: centered in X, offset from bottom wall in Y, sitting on floor (Z=0)
         const barXPos = 0;
         const barYPos = -(interiorDepth / 2) + barConfig.yOffset + (barYSize / 2);
-        const barZPos = barZSize / 2;
+        const barZPos = 0;  // Start at floor level
 
         let bar = drawRoundedRectangle(barXSize, barYSize, 0.5)
             .sketchOnPlane()
@@ -196,12 +196,15 @@ export default async function build(replicad) {
             const cutoutXPos = -(interiorWidth / 2) + sideMargin + cutoutRadius +
                 (i * (barConfig.cutoutDiameter + barConfig.cutoutSpacing));
 
-            // Create a half-cylinder oriented in Y direction
-            const cylinder = drawCircle(cutoutRadius)
-                .sketchOnPlane("XZ", [cutoutXPos, 0, barZPos])
-                .extrude(barYSize);
+            // Create a cylinder lying horizontally along Y axis, positioned at bar height
+            // The cylinder center should be at the top of the bar so it cuts a half-circle groove
+            const cylinderCenterZ = barZSize;  // At the top of the bar
 
-            bar = bar.cut(cylinder.translate([0, barYPos - (barYSize / 2), 0]));
+            const cylinder = drawCircle(cutoutRadius)
+                .sketchOnPlane("XZ", [cutoutXPos, 0, cylinderCenterZ])
+                .extrude(barYSize + 2);  // Extrude along Y axis
+
+            bar = bar.cut(cylinder.translate([0, barYPos - (barYSize / 2) - 1, 0]));
         }
 
         return bar;

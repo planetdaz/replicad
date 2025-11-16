@@ -36,13 +36,13 @@ export default async function build(replicad) {
             cutoutSpacing: 10
         },
         {
-            enabled: false,
-            yOffset: 40,
-            width: 8,
-            height: 12,
-            cutoutDiameter: 8,
-            cutoutQty: 5,
-            cutoutSpacing: 1.5
+            enabled: true,
+            yOffset: 120,
+            width: 6,
+            height: 10,
+            cutoutDiameter: 5,
+            cutoutQty: 4,
+            cutoutSpacing: 10
         }
     ];
 

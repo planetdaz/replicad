@@ -1,7 +1,6 @@
 // Main viewer script
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 
 // Get DOM elements
 const canvas = document.getElementById('canvas');
@@ -117,7 +116,7 @@ const worker = new Worker(new URL('./worker.js', import.meta.url), {
 });
 
 worker.addEventListener('message', (event) => {
-    const { type, meshes, error, models } = event.data;
+    const { type, meshes, error, models, blob, modelId } = event.data;
 
     if (type === 'MODELS_LIST') {
         // Store models list
@@ -195,6 +194,27 @@ worker.addEventListener('message', (event) => {
             controls.update();
         }
 
+    } else if (type === 'STL_READY') {
+        // STL export is ready
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+
+        // Get model name for filename
+        const selectedModel = availableModels.find(m => m.id === modelId);
+        const filename = selectedModel ? `${selectedModel.id}.stl` : 'model.stl';
+        link.download = filename;
+
+        // Trigger download
+        link.click();
+
+        // Clean up
+        URL.revokeObjectURL(link.href);
+
+        updateStatus('STL exported successfully!', 'ready');
+        setTimeout(() => {
+            updateStatus('Model loaded successfully!', 'ready');
+        }, 2000);
+
     } else if (type === 'ERROR') {
         updateStatus(`Error: ${error}`, 'error');
         console.error('Worker error:', error);
@@ -268,53 +288,24 @@ window.addEventListener('resize', () => {
 
 // Export STL functionality
 exportButton.addEventListener('click', () => {
-    if (currentModelMeshes.length === 0) {
+    const selectedModelId = modelSelect.value;
+
+    if (!selectedModelId || currentModelMeshes.length === 0) {
         alert('No model loaded to export');
         return;
     }
 
     try {
-        // Create a temporary group to hold the meshes in their original orientation
-        const exportGroup = new THREE.Group();
-
-        // Clone each mesh and undo the rotation for export
-        currentModelMeshes.forEach(mesh => {
-            const clonedMesh = mesh.clone();
-            // Undo the -90 degree rotation so STL is in original orientation
-            clonedMesh.rotation.x = Math.PI / 2;
-            // Remove edge lines from the clone (only export the solid geometry)
-            clonedMesh.children = [];
-            exportGroup.add(clonedMesh);
+        updateStatus('Exporting STL...', 'loading');
+        // Request STL export from worker (uses replicad's native export)
+        worker.postMessage({
+            type: 'EXPORT_STL',
+            modelId: selectedModelId
         });
-
-        // Export to STL
-        const exporter = new STLExporter();
-        const stlString = exporter.parse(exportGroup, { binary: false });
-
-        // Create download link
-        const blob = new Blob([stlString], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-
-        // Get current model name for filename
-        const selectedModel = availableModels.find(m => m.id === modelSelect.value);
-        const filename = selectedModel ? `${selectedModel.id}.stl` : 'model.stl';
-        link.download = filename;
-
-        // Trigger download
-        link.click();
-
-        // Clean up
-        URL.revokeObjectURL(link.href);
-
-        updateStatus('STL exported successfully!', 'ready');
-        setTimeout(() => {
-            updateStatus('Model loaded successfully!', 'ready');
-        }, 2000);
-
     } catch (error) {
         console.error('Export error:', error);
         alert('Failed to export STL: ' + error.message);
+        updateStatus('Model loaded successfully!', 'ready');
     }
 });
 

@@ -60,6 +60,26 @@ self.addEventListener('message', async (event) => {
                 type: 'MODEL_READY',
                 meshes,
             });
+        } else if (type === 'EXPORT_STL') {
+            // Initialize if needed
+            await init();
+
+            // Build the model
+            const shape = await buildModel(modelId);
+
+            // Export to STL using replicad's native export
+            const stlBlob = shape.blobSTL({
+                tolerance: 0.1,
+                angularTolerance: 30,
+                binary: false
+            });
+
+            // Send back to main thread
+            self.postMessage({
+                type: 'STL_READY',
+                blob: stlBlob,
+                modelId: modelId
+            });
         } else if (type === 'GET_MODELS') {
             // Send the list of available models
             self.postMessage({

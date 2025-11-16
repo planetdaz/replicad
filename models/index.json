@@ -16,6 +16,12 @@
         "name": "Gridfinity Test Box",
         "description": "Gridfinity box (2x1 units, 0.5 height) - Configurable storage box on gridfinity base",
         "file": "./gridfinity-test.js"
+    },
+    {
+        "id": "gridfinity-screwdriver",
+        "name": "Gridfinity Screwdriver Holder",
+        "description": "Gridfinity box with customizable bars and cylinder cutouts for holding screwdrivers",
+        "file": "./gridfinity-screwdriver.js"
     }
 ]
 

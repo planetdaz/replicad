@@ -48,15 +48,20 @@ const main = (replicad: any) => {
 
 ## 🌐 Using Replicad Studio
 
-### Current Workflow (Copy/Paste)
+### Recommended Workflow (Live Reload)
+1. Start TypeScript watch mode: `npm run watch`
+2. Open [Replicad Studio Workbench](https://studio.replicad.xyz/workbench)
+3. Click **"Toggle Autoreload"** button in the upper left
+4. Choose your compiled `.js` file from the file picker
+5. Split your screen: VS Code on one side, browser on the other
+6. **Edit and save** your `.ts` file - changes will **live update** in the browser automatically!
+
+### Alternative Workflow (Copy/Paste)
 1. Open [Replicad Studio Workbench](https://studio.replicad.xyz/workbench)
 2. Copy the compiled JavaScript code from your `.js` file
 3. Paste into the online editor
 4. View the 3D model in real-time
 5. Export as STL for 3D printing
-
-### Alternative Online Tool
-There's another online tool where you can directly open files from the web UI, but the exact URL needs to be located.
 
 ## 📁 Current Files
 

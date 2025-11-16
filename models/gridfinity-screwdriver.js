@@ -7,7 +7,7 @@ export default async function build(replicad) {
     // Configurable parameters
     const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
     const ySize = 4;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 4;       // Height in gridfinity units (1 unit = 7mm)
+    const height = 2.5;       // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -24,7 +24,7 @@ export default async function build(replicad) {
             height: 10,         // Height in Z direction (mm)
             cutoutDiameter: 14, // Diameter of cylinder cutouts (mm)
             cutoutQty: 4,       // Number of cylinder cutouts
-            cutoutSpacing: 2    // Spacing between cutouts (mm)
+            cutoutCenterSpacing: 16  // Distance between cylinder centerlines (mm)
         },
         {
             enabled: true,
@@ -33,16 +33,16 @@ export default async function build(replicad) {
             height: 10,
             cutoutDiameter: 5,
             cutoutQty: 4,
-            cutoutSpacing: 10
+            cutoutCenterSpacing: 16  // Same spacing = cylinders align with first bar
         },
         {
             enabled: true,
             yOffset: 120,
             width: 6,
             height: 10,
-            cutoutDiameter: 5,
+            cutoutDiameter: 2,
             cutoutQty: 4,
-            cutoutSpacing: 10
+            cutoutCenterSpacing: 16  // Same spacing = cylinders align with first bar
         }
     ];
 
@@ -169,10 +169,11 @@ export default async function build(replicad) {
         const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
         const interiorDepth = ySize * SIZE - CLEARANCE - (2 * wallThickness);
 
-        // Calculate total width needed for cutouts
-        const totalCutoutWidth = (barConfig.cutoutQty * barConfig.cutoutDiameter) +
-            ((barConfig.cutoutQty - 1) * barConfig.cutoutSpacing);
-        const sideMargin = (interiorWidth - totalCutoutWidth) / 2;
+        // Calculate centerline-based positioning for cylinders
+        // Total span of all cylinder centerlines
+        const totalCenterlineSpan = (barConfig.cutoutQty - 1) * barConfig.cutoutCenterSpacing;
+        // Starting X position (leftmost cylinder centerline)
+        const firstCylinderCenterX = -(totalCenterlineSpan / 2);
 
         // Create the base bar that spans the full width
         const barXSize = interiorWidth;
@@ -193,8 +194,8 @@ export default async function build(replicad) {
         const cutoutRadius = barConfig.cutoutDiameter / 2;
 
         for (let i = 0; i < barConfig.cutoutQty; i++) {
-            const cutoutXPos = -(interiorWidth / 2) + sideMargin + cutoutRadius +
-                (i * (barConfig.cutoutDiameter + barConfig.cutoutSpacing));
+            // Position based on centerline spacing
+            const cutoutCenterX = firstCylinderCenterX + (i * barConfig.cutoutCenterSpacing);
 
             // Create a cylinder lying horizontally along Y axis
             // NOTE: extruding a sketch on the XZ plane goes in the NEGATIVE Y direction
@@ -207,7 +208,7 @@ export default async function build(replicad) {
             // Position the cylinder so its CENTER in Y matches the bar center (barYPos)
             // Center of cylinder in Y is: cylinderY - cylinderLength / 2
             // => set cylinderY = barYPos + cylinderLength / 2
-            const cylinderX = barXPos + cutoutXPos;
+            const cylinderX = barXPos + cutoutCenterX;
             const cylinderY = barYPos + cylinderLength / 2;
             const cylinderZ = barZPos + barZSize;  // At the top of the bar
 

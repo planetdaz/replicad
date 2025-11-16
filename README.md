@@ -48,15 +48,13 @@ const main = (replicad: any) => {
 
 ## 🌐 Using Replicad Studio
 
-### Current Workflow (Copy/Paste)
-1. Open [Replicad Studio Workbench](https://studio.replicad.xyz/workbench)
-2. Copy the compiled JavaScript code from your `.js` file
-3. Paste into the online editor
-4. View the 3D model in real-time
-5. Export as STL for 3D printing
-
-### Alternative Online Tool
-There's another online tool where you can directly open files from the web UI, but the exact URL needs to be located.
+### Recommended Workflow (Live Reload)
+1. Start TypeScript watch mode: `npm run watch`
+2. Open [Replicad Studio Workbench](https://studio.replicad.xyz/workbench)
+3. Click **"Toggle Autoreload"** button in the upper left
+4. Choose your compiled `.js` file from the file picker
+5. Split your screen: VS Code on one side, browser on the other
+6. **Edit and save** your `.ts` file - changes will **live update** in the browser automatically!
 
 ## 📁 Current Files
 
@@ -68,9 +66,7 @@ There's another online tool where you can directly open files from the web UI, b
 ## 🔧 Available Scripts
 
 ```bash
-npm run build    # One-time compilation
-npm run watch    # Auto-compile on file changes (recommended)
-npm run dev      # Alias for watch mode
+npm run watch    # Auto-compile on file changes
 ```
 
 ## 🎨 Example Models
@@ -109,13 +105,6 @@ const main = (replicad: any) => {
     return hexagon.close().sketchOnPlane().extrude(1);
 };
 ```
-
-## 🚀 Future Improvements
-
-- **Local Replicad Server** - Run Replicad locally in VS Code as a hosted Node.js app
-- **Direct STL Export** - Export STL files directly without online tools
-- **Multiple Model Management** - Better workflow for managing multiple models
-- **AI-Assisted Design** - Use AI agents to quickly describe shapes in English and generate code
 
 ## 🤖 AI-Assisted Workflow
 

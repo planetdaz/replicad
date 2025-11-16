@@ -2,6 +2,7 @@
 import opencascade from 'replicad-opencascadejs/src/replicad_single.js';
 import opencascadeWasm from 'replicad-opencascadejs/src/replicad_single.wasm?url';
 import { setOC } from 'replicad';
+import { models } from './models.js';
 
 let initialized = false;
 
@@ -17,35 +18,26 @@ async function init() {
     initialized = true;
 }
 
-// Import the model function
-async function buildModel() {
-    // Import replicad functions
-    const { drawCircle } = await import('replicad');
+// Build a model by ID
+async function buildModel(modelId) {
+    // Find the model in the registry
+    const modelConfig = models.find(m => m.id === modelId);
+    if (!modelConfig) {
+        throw new Error(`Model "${modelId}" not found`);
+    }
 
-    // Vent ring dimensions
-    const outerDiameter = 48.2;
-    const innerDiameter = 46.4;
-    const height = 5;
+    // Import replicad
+    const replicad = await import('replicad');
 
-    // Calculate radii
-    const outerRadius = outerDiameter / 2;
-    const innerRadius = innerDiameter / 2;
-
-    // Create outer cylinder
-    const outerCylinder = drawCircle(outerRadius).sketchOnPlane().extrude(height);
-
-    // Create inner cylinder (hole)
-    const innerCylinder = drawCircle(innerRadius).sketchOnPlane().extrude(height);
-
-    // Subtract inner from outer to create ring
-    const result = outerCylinder.cut(innerCylinder);
+    // Call the model's build function
+    const result = await modelConfig.buildFunction(replicad);
 
     return result;
 }
 
 // Handle messages from main thread
 self.addEventListener('message', async (event) => {
-    const { type } = event.data;
+    const { type, modelId } = event.data;
 
     try {
         if (type === 'BUILD_MODEL') {
@@ -53,7 +45,7 @@ self.addEventListener('message', async (event) => {
             await init();
 
             // Build the model
-            const shape = await buildModel();
+            const shape = await buildModel(modelId);
 
             // Get mesh data for rendering
             const mesh = shape.mesh({ tolerance: 0.1, angularTolerance: 30 });
@@ -67,6 +59,16 @@ self.addEventListener('message', async (event) => {
             self.postMessage({
                 type: 'MODEL_READY',
                 meshes,
+            });
+        } else if (type === 'GET_MODELS') {
+            // Send the list of available models
+            self.postMessage({
+                type: 'MODELS_LIST',
+                models: models.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    description: m.description
+                }))
             });
         }
     } catch (error) {

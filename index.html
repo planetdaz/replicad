@@ -32,6 +32,52 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .model-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .model-selector label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        #modelSelect {
+            padding: 0.5rem 1rem;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        #modelSelect:hover {
+            background: #4a4a4a;
+        }
+
+        #modelSelect:focus {
+            outline: 2px solid #4a90e2;
+            outline-offset: 2px;
+        }
+
+        .model-description {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 0.25rem;
         }
         
         h1 {
@@ -99,7 +145,16 @@
 <body>
     <div id="container">
         <div id="header">
-            <h1>🔧 Replicad Viewer</h1>
+            <div class="header-left">
+                <h1>🔧 Replicad Viewer</h1>
+                <div class="model-selector">
+                    <label for="modelSelect">Select Model:</label>
+                    <select id="modelSelect">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <div id="modelDescription" class="model-description"></div>
+                </div>
+            </div>
             <div id="status" class="loading">Initializing...</div>
         </div>
         <div id="viewer">

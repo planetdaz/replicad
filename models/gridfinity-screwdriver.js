@@ -19,24 +19,24 @@ export default async function build(replicad) {
     const bars = [
         {
             enabled: true,
-            yOffset: 20,         // Distance from bottom wall (mm)
+            yOffset: 25,         // Distance from bottom wall (mm)
             width: 20,          // Width in Y direction (mm)
             height: 10,         // Height in Z direction (mm)
             cutoutDiameter: 14, // Diameter of cylinder cutouts (mm)
-            cutoutQty: 4,       // Number of cylinder cutouts
+            cutoutQty: 5,       // Number of cylinder cutouts
             cutoutCenterSpacing: 16  // Distance between cylinder centerlines (mm)
         },
         {
             enabled: true,
-            yOffset: 70,
+            yOffset: 95,
             width: 6,
             height: 10,
-            cutoutDiameter: 5,
-            cutoutQty: 4,
+            cutoutDiameter: 6,
+            cutoutQty: 5,
             cutoutCenterSpacing: 16  // Same spacing = cylinders align with first bar
         },
         {
-            enabled: true,
+            enabled: false,
             yOffset: 120,
             width: 6,
             height: 10,

@@ -21,7 +21,7 @@ const STORAGE_KEYS = {
 
 // Set up Three.js scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a1a);
+scene.background = new THREE.Color(0xf0f0f0); // Light gray background for CAD style
 
 // Camera
 const camera = new THREE.PerspectiveCamera(
@@ -46,20 +46,12 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+// Lighting - Full ambient for CAD-style flat lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
 scene.add(ambientLight);
 
-const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight1.position.set(50, 50, 50);
-scene.add(directionalLight1);
-
-const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
-directionalLight2.position.set(-50, -50, -50);
-scene.add(directionalLight2);
-
-// Grid helper
-const gridHelper = new THREE.GridHelper(100, 20, 0x444444, 0x222222);
+// Grid helper - darker lines for light background
+const gridHelper = new THREE.GridHelper(100, 20, 0x888888, 0xcccccc);
 scene.add(gridHelper);
 
 // Axes helper
@@ -88,11 +80,9 @@ function createMeshFromData(meshData) {
     const indices = new Uint32Array(meshData.triangles);
     geometry.setIndex(new THREE.BufferAttribute(indices, 1));
 
-    // Create material
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x4a90e2,
-        metalness: 0.3,
-        roughness: 0.4,
+    // Create CAD-style material (flat, no lighting effects)
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x3498db, // Bright blue for good contrast on light background
         side: THREE.DoubleSide,
     });
 
@@ -102,6 +92,16 @@ function createMeshFromData(meshData) {
     // Rotate mesh so it lies flat on the XY plane (like a 3D printer bed)
     // Replicad extrudes in Z, but we want models to sit on the grid
     mesh.rotation.x = -Math.PI / 2; // Rotate -90 degrees around X axis
+
+    // Add edge lines for CAD-style outline
+    const edges = new THREE.EdgesGeometry(geometry, 15); // 15 degree threshold for edges
+    const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x000000,
+        linewidth: 1
+    });
+    const edgeLines = new THREE.LineSegments(edges, lineMaterial);
+    edgeLines.rotation.x = -Math.PI / 2; // Match mesh rotation
+    mesh.add(edgeLines);
 
     return mesh;
 }

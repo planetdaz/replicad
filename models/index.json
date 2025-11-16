@@ -10,6 +10,12 @@
         "name": "Custom Hexagon",
         "description": "Hexagon (120mm x 60mm x 1mm with triangular extensions)",
         "file": "./hexagon.js"
+    },
+    {
+        "id": "gridfinity-test",
+        "name": "Gridfinity Test Box",
+        "description": "Gridfinity box (2x1 units, 0.5 height) - Configurable storage box on gridfinity base",
+        "file": "./gridfinity-test.js"
     }
 ]
 

@@ -2,6 +2,8 @@
 
 A local 3D viewer for creating and viewing [Replicad](https://replicad.xyz/) models with interactive controls and STL export. Define 3D shapes procedurally in JavaScript and visualize them instantly in a CAD-style viewer.
 
+![Replicad Viewer UI](replicad-viewer-ui.png)
+
 ## 🚀 Quick Start
 
 ```bash

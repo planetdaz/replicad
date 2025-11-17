@@ -96,7 +96,6 @@ replicad/
 
 ### Vent Ring
 
-<augment_code_snippet path="models/vent-ring.js" mode="EXCERPT">
 ````javascript
 export default async function build(replicad) {
     const { drawCircle } = replicad;
@@ -114,11 +113,9 @@ export default async function build(replicad) {
     return outerCylinder.cut(innerCylinder);
 }
 ````
-</augment_code_snippet>
 
 ### Custom Hexagon
 
-<augment_code_snippet path="models/hexagon.js" mode="EXCERPT">
 ````javascript
 export default async function build(replicad) {
     const { draw } = replicad;
@@ -136,7 +133,6 @@ export default async function build(replicad) {
     return hexagon.close().sketchOnPlane().extrude(1);
 }
 ````
-</augment_code_snippet>
 
 ## 💡 Tips
 

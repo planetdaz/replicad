@@ -5,8 +5,8 @@ export default async function build(replicad) {
     const { draw, drawRoundedRectangle, drawCircle, makeSolid, assembleWire, makeFace, EdgeFinder } = replicad;
 
     // Configurable parameters
-    const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
-    const ySize = 3;        // Number of gridfinity units in Y direction (1 unit = 42mm)
+    const xSize = 3;        // Number of gridfinity units in X direction (1 unit = 42mm)
+    const ySize = 5;        // Number of gridfinity units in Y direction (1 unit = 42mm)
     const height = 2.4;     // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
@@ -18,13 +18,12 @@ export default async function build(replicad) {
     // Bar configuration - both bars use same dimensions
     const barWidth = 20;           // Width in Y direction (mm) - applies to both bars
     const barHeight = 10;          // Height in Z direction (mm) - applies to both bars
-    const barYOffset = 25;         // Distance from bottom/top wall (mm)
+    const barYOffset = 5;         // Distance from bottom/top wall (mm)
 
     // Cutout configuration
     const largeCutoutDiameter = 14;  // Diameter for handle cutouts (mm)
     const smallCutoutDiameter = 6;   // Diameter for shaft cutouts (mm)
     const cutoutQty = 5;             // Total number of cutout positions
-    const cutoutCenterSpacing = 16;  // Distance between cylinder centerlines (mm)
 
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm
@@ -148,9 +147,16 @@ export default async function build(replicad) {
         const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
         const interiorDepth = ySize * SIZE - CLEARANCE - (2 * wallThickness);
 
-        // Calculate centerline-based positioning for cylinders
-        const totalCenterlineSpan = (cutoutQty - 1) * cutoutCenterSpacing;
-        const firstCylinderCenterX = -(totalCenterlineSpan / 2);
+        // Calculate total diameter needed for all cutouts
+        // Count how many of each size we need
+        const largeCount = Math.ceil(cutoutQty / 2);
+        const smallCount = Math.floor(cutoutQty / 2);
+        const totalDiameter = (largeCount * largeCutoutDiameter) + (smallCount * smallCutoutDiameter);
+
+        // Calculate spacing: distribute remaining space evenly between cutouts
+        // We have (cutoutQty + 1) gaps: one before first, one after last, and one between each pair
+        const availableSpace = interiorWidth - totalDiameter;
+        const spacing = availableSpace / (cutoutQty + 1);
 
         // Create the base bar that spans the full width
         const barXSize = interiorWidth;
@@ -175,19 +181,23 @@ export default async function build(replicad) {
             .translate([barXPos, barYPos, barZPos]);
 
         // Create alternating cylinder cutouts
-        for (let i = 0; i < cutoutQty; i++) {
-            // Position based on centerline spacing
-            const cutoutCenterX = firstCylinderCenterX + (i * cutoutCenterSpacing);
+        // Start from the left edge and work our way right
+        let currentX = -(interiorWidth / 2) + spacing;  // Start with one spacing from left edge
 
+        for (let i = 0; i < cutoutQty; i++) {
             // Determine which diameter to use based on position and which bar
             // Bottom bar: even indices (0,2,4...) = large, odd indices (1,3,5...) = small
             // Top bar: even indices = small, odd indices = large (opposite pattern)
-            let cutoutRadius;
+            let cutoutDiameter;
             if (isBottomBar) {
-                cutoutRadius = (i % 2 === 0) ? (largeCutoutDiameter / 2) : (smallCutoutDiameter / 2);
+                cutoutDiameter = (i % 2 === 0) ? largeCutoutDiameter : smallCutoutDiameter;
             } else {
-                cutoutRadius = (i % 2 === 0) ? (smallCutoutDiameter / 2) : (largeCutoutDiameter / 2);
+                cutoutDiameter = (i % 2 === 0) ? smallCutoutDiameter : largeCutoutDiameter;
             }
+            const cutoutRadius = cutoutDiameter / 2;
+
+            // Position this cutout's center
+            const cutoutCenterX = currentX + cutoutRadius;
 
             // Create a cylinder lying horizontally along Y axis
             const cylinderLength = barYSize * 2; // 2x bar width so it fully passes through
@@ -201,6 +211,9 @@ export default async function build(replicad) {
             const cylinderZ = barZPos + barZSize;  // At the top of the bar
 
             bar = bar.cut(cylinder.translate([cylinderX, cylinderY, cylinderZ]));
+
+            // Move to next position: current position + this diameter + spacing
+            currentX = currentX + cutoutDiameter + spacing;
         }
 
         return bar;

@@ -7,7 +7,7 @@ export default async function build(replicad) {
     // Configurable parameters
     const xSize = 3;        // Number of gridfinity units in X direction (1 unit = 42mm)
     const ySize = 5;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 2.4;     // Height in gridfinity units (1 unit = 7mm)
+    const height = 3;     // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -18,12 +18,12 @@ export default async function build(replicad) {
     // Bar configuration - both bars use same dimensions
     const barWidth = 20;           // Width in Y direction (mm) - applies to both bars
     const barHeight = 10;          // Height in Z direction (mm) - applies to both bars
-    const barYOffset = 5;         // Distance from bottom/top wall (mm)
+    const barYOffset = 42;         // Distance from bottom/top wall (mm)
 
     // Cutout configuration
-    const largeCutoutDiameter = 14;  // Diameter for handle cutouts (mm)
+    const largeCutoutDiameter = 17;  // Diameter for handle cutouts (mm)
     const smallCutoutDiameter = 6;   // Diameter for shaft cutouts (mm)
-    const cutoutQty = 5;             // Total number of cutout positions
+    const cutoutQty = 6;             // Total number of cutout positions
 
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm

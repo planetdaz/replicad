@@ -22,6 +22,12 @@
         "name": "Gridfinity Screwdriver Holder",
         "description": "Gridfinity box with customizable bars and cylinder cutouts for holding screwdrivers",
         "file": "./gridfinity-screwdriver.js"
+    },
+    {
+        "id": "gridfinity-screwdriver-dual",
+        "name": "Gridfinity Dual Screwdriver Holder",
+        "description": "Gridfinity box with 2 bars and alternating cutouts for screwdrivers facing opposite directions",
+        "file": "./gridfinity-screwdriver-dual.js"
     }
 ]
 

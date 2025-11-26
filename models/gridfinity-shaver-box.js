@@ -21,6 +21,11 @@ export default async function build(replicad) {
     const cutoutFromFront = 7;   // Distance from front wall to start of cutout (mm)
     const cutoutCornerRadius = 5; // Corner radius for the rounded rectangle cutout
 
+    // Divider configuration
+    const dividerEnabled = true;      // Enable/disable the divider
+    const dividerThickness = 2;       // Thickness of the divider wall (mm)
+    const dividerFromBack = 20;       // Distance from back wall to the divider (mm)
+
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm
     const HEIGHT_UNIT = 7.0;        // Height unit size in mm
@@ -181,6 +186,23 @@ export default async function build(replicad) {
     const cutoutZ = stdHeight - cutoutDepth + cutoutHeight / 2;
 
     const positionedCutout = wallCutout.translate([cutoutX, cutoutY, cutoutZ]);
+
+    // Build the divider wall (spans from left to right wall)
+    if (dividerEnabled) {
+        const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
+        const interiorDepth = ySize * SIZE - CLEARANCE - (2 * wallThickness);
+
+        // Divider spans full interior width, with specified thickness
+        // Position: back wall is at +Y side, so divider Y = backWall - dividerFromBack - dividerThickness/2
+        const dividerY = (interiorDepth / 2) - dividerFromBack - (dividerThickness / 2);
+
+        const divider = drawRoundedRectangle(interiorWidth, dividerThickness, 0.5)
+            .sketchOnPlane()
+            .extrude(stdHeight)
+            .translate([0, dividerY, 0]);
+
+        box = box.fuse(divider);
+    }
 
     // Fuse all parts together first
     let result = base

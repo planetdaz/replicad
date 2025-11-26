@@ -137,7 +137,9 @@ export default async function build(replicad) {
     };
 
     // Main build logic
-    const stdHeight = height * HEIGHT_UNIT;
+    // The stacking lip adds SOCKET_TAPER_WIDTH (3.2mm) on top, so reduce box height accordingly
+    // This ensures total height from base interface to lip top = height * HEIGHT_UNIT
+    const stdHeight = height * HEIGHT_UNIT - SOCKET_TAPER_WIDTH;
     let box = drawRoundedRectangle(
         xSize * SIZE - CLEARANCE,
         ySize * SIZE - CLEARANCE,

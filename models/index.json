@@ -28,6 +28,12 @@
         "name": "Gridfinity Dual Screwdriver Holder",
         "description": "Gridfinity box with 2 bars and alternating cutouts for screwdrivers facing opposite directions",
         "file": "./gridfinity-screwdriver-dual.js"
+    },
+    {
+        "id": "gridfinity-shaver-box",
+        "name": "Gridfinity Shaver Box",
+        "description": "Gridfinity box (2x3 units, 42mm tall) with side wall cutouts for easy shaver access",
+        "file": "./gridfinity-shaver-box.js"
     }
 ]
 

@@ -24,6 +24,7 @@ export default async function build(replicad) {
     const largeCutoutDiameter = 17;  // Diameter for handle cutouts (mm)
     const smallCutoutDiameter = 6;   // Diameter for shaft cutouts (mm)
     const cutoutQty = 6;             // Total number of cutout positions
+    const cutoutCenterSpacing = 20;  // Distance between cylinder centerlines (mm)
 
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm
@@ -147,16 +148,10 @@ export default async function build(replicad) {
         const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
         const interiorDepth = ySize * SIZE - CLEARANCE - (2 * wallThickness);
 
-        // Calculate total diameter needed for all cutouts
-        // Count how many of each size we need
-        const largeCount = Math.ceil(cutoutQty / 2);
-        const smallCount = Math.floor(cutoutQty / 2);
-        const totalDiameter = (largeCount * largeCutoutDiameter) + (smallCount * smallCutoutDiameter);
-
-        // Calculate spacing: distribute remaining space evenly between cutouts
-        // We have (cutoutQty + 1) gaps: one before first, one after last, and one between each pair
-        const availableSpace = interiorWidth - totalDiameter;
-        const spacing = availableSpace / (cutoutQty + 1);
+        // Calculate centerline-based positioning for cylinders
+        // All cylinders are positioned by their centerlines so they align across bars
+        const totalCenterlineSpan = (cutoutQty - 1) * cutoutCenterSpacing;
+        const firstCylinderCenterX = -(totalCenterlineSpan / 2);
 
         // Create the base bar that spans the full width
         const barXSize = interiorWidth;
@@ -180,10 +175,7 @@ export default async function build(replicad) {
             .extrude(barZSize)
             .translate([barXPos, barYPos, barZPos]);
 
-        // Create alternating cylinder cutouts
-        // Start from the left edge and work our way right
-        let currentX = -(interiorWidth / 2) + spacing;  // Start with one spacing from left edge
-
+        // Create alternating cylinder cutouts positioned by centerline
         for (let i = 0; i < cutoutQty; i++) {
             // Determine which diameter to use based on position and which bar
             // Bottom bar: even indices (0,2,4...) = large, odd indices (1,3,5...) = small
@@ -196,8 +188,8 @@ export default async function build(replicad) {
             }
             const cutoutRadius = cutoutDiameter / 2;
 
-            // Position this cutout's center
-            const cutoutCenterX = currentX + cutoutRadius;
+            // Position based on centerline spacing (same for both bars = aligned centerlines)
+            const cutoutCenterX = firstCylinderCenterX + (i * cutoutCenterSpacing);
 
             // Create a cylinder lying horizontally along Y axis
             const cylinderLength = barYSize * 2; // 2x bar width so it fully passes through
@@ -211,9 +203,6 @@ export default async function build(replicad) {
             const cylinderZ = barZPos + barZSize;  // At the top of the bar
 
             bar = bar.cut(cylinder.translate([cylinderX, cylinderY, cylinderZ]));
-
-            // Move to next position: current position + this diameter + spacing
-            currentX = currentX + cutoutDiameter + spacing;
         }
 
         return bar;

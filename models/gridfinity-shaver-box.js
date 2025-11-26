@@ -187,6 +187,14 @@ export default async function build(replicad) {
 
     const positionedCutout = wallCutout.translate([cutoutX, cutoutY, cutoutZ]);
 
+    // Fuse all parts together first
+    let result = base
+        .fuse(box, { optimisation: "commonFace" })
+        .fuse(top, { optimisation: "commonFace" });
+
+    // Apply wall cutout to the entire fused model (including stacking lips)
+    result = result.cut(positionedCutout);
+
     // Build the divider wall (spans from left to right wall)
     if (dividerEnabled) {
         const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
@@ -201,15 +209,9 @@ export default async function build(replicad) {
             .extrude(stdHeight)
             .translate([0, dividerY, 0]);
 
-        box = box.fuse(divider);
+        result = result.fuse(divider);
     }
 
-    // Fuse all parts together first
-    let result = base
-        .fuse(box, { optimisation: "commonFace" })
-        .fuse(top, { optimisation: "commonFace" });
-
-    // Apply wall cutout to the entire fused model (including stacking lips)
-    return result.cut(positionedCutout);
+    return result;
 }
 

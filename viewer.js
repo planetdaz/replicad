@@ -173,20 +173,25 @@ worker.addEventListener('message', (event) => {
     } else if (type === 'MODEL_READY') {
         updateStatus('Model loaded successfully!', 'ready');
 
-        // Remove old model meshes
+        // Build new meshes first (before removing old ones for seamless transition)
+        const newMeshes = [];
+        meshes.forEach(meshData => {
+            const mesh = createMeshFromData(meshData);
+            newMeshes.push(mesh);
+        });
+
+        // Now remove old model meshes
         currentModelMeshes.forEach(mesh => {
             scene.remove(mesh);
             mesh.geometry.dispose();
             mesh.material.dispose();
         });
-        currentModelMeshes = [];
 
-        // Add new meshes to scene
-        meshes.forEach(meshData => {
-            const mesh = createMeshFromData(meshData);
+        // Add the new meshes to scene
+        newMeshes.forEach(mesh => {
             scene.add(mesh);
-            currentModelMeshes.push(mesh);
         });
+        currentModelMeshes = newMeshes;
 
         // Try to restore saved camera position
         const savedPosition = sessionStorage.getItem(STORAGE_KEYS.CAMERA_POSITION);

@@ -5,9 +5,9 @@ export default async function build(replicad) {
     const { draw, drawRoundedRectangle, drawCircle, makeSolid, assembleWire, makeFace, EdgeFinder } = replicad;
 
     // Configurable parameters
-    const xSize = 3;        // Number of gridfinity units in X direction (1 unit = 42mm)
-    const ySize = 5;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 4;     // Height in gridfinity units (1 unit = 7mm)
+    const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
+    const ySize = 4;        // Number of gridfinity units in Y direction (1 unit = 42mm)
+    const height = 3;     // Height in gridfinity units (1 unit = 7mm)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -16,15 +16,15 @@ export default async function build(replicad) {
     const screwRadius = 1.5;
 
     // Bar configuration - both bars use same dimensions
-    const barWidth = 20;           // Width in Y direction (mm) - applies to both bars
-    const barHeight = 10;          // Height in Z direction (mm) - applies to both bars
-    const barYOffset = 42;         // Distance from bottom/top wall (mm)
+    const barWidth = 15;           // Width in Y direction (mm) - applies to both bars
+    const barHeight = 9;          // Height in Z direction (mm) - applies to both bars
+    const barYOffset = 28;         // Distance from bottom/top wall (mm)
 
     // Cutout configuration
-    const largeCutoutDiameter = 17;  // Diameter for handle cutouts (mm)
-    const smallCutoutDiameter = 6;   // Diameter for shaft cutouts (mm)
-    const cutoutQty = 6;             // Total number of cutout positions
-    const cutoutCenterSpacing = 20;  // Distance between cylinder centerlines (mm)
+    const largeCutoutDiameter = 15;  // Diameter for handle cutouts (mm)
+    const smallCutoutDiameter = 7;   // Diameter for shaft cutouts (mm)
+    const cutoutQty = 5;             // Total number of cutout positions
+    const cutoutCenterSpacing = 15;  // Distance between cylinder centerlines (mm)
 
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm

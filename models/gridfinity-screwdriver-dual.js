@@ -7,7 +7,8 @@ export default async function build(replicad) {
     // Configurable parameters
     const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
     const ySize = 4;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 3;     // Height in gridfinity units (1 unit = 7mm)
+    const height = 3;       // Height in gridfinity units (1 unit = 7mm)
+    const heightAdjust = -4.5; // Fine-tune overall height in mm (positive = taller, negative = shorter)
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -209,7 +210,7 @@ export default async function build(replicad) {
     };
 
     // Main build logic
-    const stdHeight = height * HEIGHT_UNIT;
+    const stdHeight = (height * HEIGHT_UNIT) + heightAdjust;
     let box = drawRoundedRectangle(
         xSize * SIZE - CLEARANCE,
         ySize * SIZE - CLEARANCE,

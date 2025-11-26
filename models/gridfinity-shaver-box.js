@@ -18,8 +18,8 @@ export default async function build(replicad) {
     // Wall cutout configuration
     const cutoutDepth = 30;      // Depth from top edge down (mm)
     const cutoutWidth = 45;      // Width of the cutout (mm)
-    const cutoutFromFront = 5;   // Distance from front wall to start of cutout (mm)
-    const cutoutCornerRadius = 3; // Corner radius for the rounded rectangle cutout
+    const cutoutFromFront = 7;   // Distance from front wall to start of cutout (mm)
+    const cutoutCornerRadius = 5; // Corner radius for the rounded rectangle cutout
 
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm
@@ -160,7 +160,8 @@ export default async function build(replicad) {
     // The cutout is a rounded rectangle that passes through both side walls
     const binDepth = ySize * SIZE - CLEARANCE;
     const binWidth = xSize * SIZE;
-    const cutoutHeight = cutoutDepth + 1;  // Extra 1mm to ensure it clears the top edge
+    const cutoutTopOverhang = 10;  // Extra height above box to cut through stacking lip
+    const cutoutHeight = cutoutDepth + cutoutTopOverhang;
     const cutoutExtrusionX = binWidth + 4;  // Wider than bin to pass through both walls
 
     // Create cutout on YZ plane (Y = width along wall, Z = depth from top)
@@ -171,10 +172,10 @@ export default async function build(replicad) {
     // Position the cutout:
     // - X: centered so it passes through both left and right walls
     // - Y: starts cutoutFromFront distance from the front wall (-Y side)
-    // - Z: at top of bin, extending down
+    // - Z: top of cutout extends above box, bottom extends cutoutDepth down from top
     const cutoutX = -(cutoutExtrusionX / 2);
     const cutoutY = -binDepth / 2 + cutoutFromFront + cutoutWidth / 2;
-    const cutoutZ = stdHeight - cutoutHeight / 2 + 0.5;
+    const cutoutZ = stdHeight - cutoutDepth + cutoutHeight / 2;
 
     const positionedCutout = wallCutout.translate([cutoutX, cutoutY, cutoutZ]);
 

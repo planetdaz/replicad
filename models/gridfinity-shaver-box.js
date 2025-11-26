@@ -1,14 +1,13 @@
-// Gridfinity Dual Screwdriver Holder
-// Gridfinity box with 2 bars and alternating cutouts for holding screwdrivers facing opposite directions
+// Gridfinity Shaver Box
+// Gridfinity box with side wall cutouts for easy shaver access
 
 export default async function build(replicad) {
     const { draw, drawRoundedRectangle, drawCircle, makeSolid, assembleWire, makeFace, EdgeFinder } = replicad;
 
     // Configurable parameters
     const xSize = 2;        // Number of gridfinity units in X direction (1 unit = 42mm)
-    const ySize = 4;        // Number of gridfinity units in Y direction (1 unit = 42mm)
-    const height = 3;       // Height in gridfinity units (1 unit = 7mm)
-    const heightAdjust = -4.5; // Fine-tune overall height in mm (positive = taller, negative = shorter)
+    const ySize = 3;        // Number of gridfinity units in Y direction (1 unit = 42mm)
+    const height = 6;       // Height in gridfinity units (1 unit = 7mm) = 42mm total
     const wallThickness = 1.2;
     const withMagnet = false;
     const withScrew = false;
@@ -16,16 +15,16 @@ export default async function build(replicad) {
     const magnetHeight = 2;
     const screwRadius = 1.5;
 
-    // Bar configuration - both bars use same dimensions
-    const barWidth = 15;           // Width in Y direction (mm) - applies to both bars
-    const barHeight = 9;          // Height in Z direction (mm) - applies to both bars
-    const barYOffset = 28;         // Distance from bottom/top wall (mm)
+    // Wall cutout configuration
+    const cutoutDepth = 30;      // Depth from top edge down (mm)
+    const cutoutWidth = 45;      // Width of the cutout (mm)
+    const cutoutFromFront = 7;   // Distance from front wall to start of cutout (mm)
+    const cutoutCornerRadius = 5; // Corner radius for the rounded rectangle cutout
 
-    // Cutout configuration
-    const largeCutoutDiameter = 15;  // Diameter for handle cutouts (mm)
-    const smallCutoutDiameter = 7;   // Diameter for shaft cutouts (mm)
-    const cutoutQty = 5;             // Total number of cutout positions
-    const cutoutCenterSpacing = 15;  // Distance between cylinder centerlines (mm)
+    // Divider configuration
+    const dividerEnabled = true;      // Enable/disable the divider
+    const dividerThickness = 1.5;       // Thickness of the divider wall (mm)
+    const dividerFromBack = 20;       // Distance from back wall to the divider (mm)
 
     // Gridfinity magic numbers
     const SIZE = 42.0;              // X/Y unit size in mm
@@ -142,75 +141,11 @@ export default async function build(replicad) {
             );
     };
 
-    // Build bar with alternating cylinder cutouts
-    // isBottomBar: true for bottom bar (starts with large), false for top bar (starts with small)
-    const buildBar = (isBottomBar) => {
-        // Calculate interior dimensions
-        const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
-        const interiorDepth = ySize * SIZE - CLEARANCE - (2 * wallThickness);
-
-        // Calculate centerline-based positioning for cylinders
-        // All cylinders are positioned by their centerlines so they align across bars
-        const totalCenterlineSpan = (cutoutQty - 1) * cutoutCenterSpacing;
-        const firstCylinderCenterX = -(totalCenterlineSpan / 2);
-
-        // Create the base bar that spans the full width
-        const barXSize = interiorWidth;
-        const barYSize = barWidth;
-        const barZSize = barHeight;
-
-        // Position: centered in X, offset from bottom or top wall in Y, sitting on floor (Z=0)
-        const barXPos = 0;
-        let barYPos;
-        if (isBottomBar) {
-            // Bottom bar: offset from bottom wall
-            barYPos = -(interiorDepth / 2) + barYOffset + (barYSize / 2);
-        } else {
-            // Top bar: offset from top wall (mirror of bottom)
-            barYPos = (interiorDepth / 2) - barYOffset - (barYSize / 2);
-        }
-        const barZPos = 0;  // Start at floor level
-
-        let bar = drawRoundedRectangle(barXSize, barYSize, 0.5)
-            .sketchOnPlane()
-            .extrude(barZSize)
-            .translate([barXPos, barYPos, barZPos]);
-
-        // Create alternating cylinder cutouts positioned by centerline
-        for (let i = 0; i < cutoutQty; i++) {
-            // Determine which diameter to use based on position and which bar
-            // Bottom bar: even indices (0,2,4...) = large, odd indices (1,3,5...) = small
-            // Top bar: even indices = small, odd indices = large (opposite pattern)
-            let cutoutDiameter;
-            if (isBottomBar) {
-                cutoutDiameter = (i % 2 === 0) ? largeCutoutDiameter : smallCutoutDiameter;
-            } else {
-                cutoutDiameter = (i % 2 === 0) ? smallCutoutDiameter : largeCutoutDiameter;
-            }
-            const cutoutRadius = cutoutDiameter / 2;
-
-            // Position based on centerline spacing (same for both bars = aligned centerlines)
-            const cutoutCenterX = firstCylinderCenterX + (i * cutoutCenterSpacing);
-
-            // Create a cylinder lying horizontally along Y axis
-            const cylinderLength = barYSize * 2; // 2x bar width so it fully passes through
-            const cylinder = drawCircle(cutoutRadius)
-                .sketchOnPlane("XZ")
-                .extrude(cylinderLength);
-
-            // Position the cylinder so its CENTER in Y matches the bar center (barYPos)
-            const cylinderX = barXPos + cutoutCenterX;
-            const cylinderY = barYPos + cylinderLength / 2;
-            const cylinderZ = barZPos + barZSize;  // At the top of the bar
-
-            bar = bar.cut(cylinder.translate([cylinderX, cylinderY, cylinderZ]));
-        }
-
-        return bar;
-    };
-
     // Main build logic
-    const stdHeight = (height * HEIGHT_UNIT) + heightAdjust;
+    // Adjust height to match other gridfinity generators (45.7mm for height=6)
+    // Standard calculation: height * 7mm, minus lip height, minus calibration offset
+    const heightCalibration = 1.6;  // Adjustment to match other gridfinity boxes
+    const stdHeight = height * HEIGHT_UNIT - SOCKET_TAPER_WIDTH - heightCalibration;
     let box = drawRoundedRectangle(
         xSize * SIZE - CLEARANCE,
         ySize * SIZE - CLEARANCE,
@@ -229,13 +164,54 @@ export default async function build(replicad) {
         else base = movedSocket;
     });
 
-    // Add both bars to the box
-    const bottomBar = buildBar(true);   // Bottom bar with large cutouts first
-    const topBar = buildBar(false);     // Top bar with small cutouts first
-    box = box.fuse(bottomBar).fuse(topBar);
+    // Create and apply wall cutouts to the side walls (left and right)
+    // The cutout is a rounded rectangle that passes through both side walls
+    const binDepth = ySize * SIZE - CLEARANCE;
+    const binWidth = xSize * SIZE;
+    const cutoutTopOverhang = 10;  // Extra height above box to cut through stacking lip
+    const cutoutHeight = cutoutDepth + cutoutTopOverhang;
+    const cutoutExtrusionX = binWidth + 4;  // Wider than bin to pass through both walls
 
-    return base
+    // Create cutout on YZ plane (Y = width along wall, Z = depth from top)
+    const wallCutout = drawRoundedRectangle(cutoutWidth, cutoutHeight, cutoutCornerRadius)
+        .sketchOnPlane("YZ")
+        .extrude(cutoutExtrusionX);  // Extrudes in +X direction
+
+    // Position the cutout:
+    // - X: centered so it passes through both left and right walls
+    // - Y: starts cutoutFromFront distance from the front wall (-Y side)
+    // - Z: top of cutout extends above box, bottom extends cutoutDepth down from top
+    const cutoutX = -(cutoutExtrusionX / 2);
+    const cutoutY = -binDepth / 2 + cutoutFromFront + cutoutWidth / 2;
+    const cutoutZ = stdHeight - cutoutDepth + cutoutHeight / 2;
+
+    const positionedCutout = wallCutout.translate([cutoutX, cutoutY, cutoutZ]);
+
+    // Fuse all parts together first
+    let result = base
         .fuse(box, { optimisation: "commonFace" })
         .fuse(top, { optimisation: "commonFace" });
+
+    // Apply wall cutout to the entire fused model (including stacking lips)
+    result = result.cut(positionedCutout);
+
+    // Build the divider wall (spans from left to right wall)
+    if (dividerEnabled) {
+        const interiorWidth = xSize * SIZE - CLEARANCE - (2 * wallThickness);
+        const interiorDepth = ySize * SIZE - CLEARANCE - (2 * wallThickness);
+
+        // Divider spans full interior width, with specified thickness
+        // Position: back wall is at +Y side, so divider Y = backWall - dividerFromBack - dividerThickness/2
+        const dividerY = (interiorDepth / 2) - dividerFromBack - (dividerThickness / 2);
+
+        const divider = drawRoundedRectangle(interiorWidth, dividerThickness, 0.5)
+            .sketchOnPlane()
+            .extrude(stdHeight)
+            .translate([0, dividerY, 0]);
+
+        result = result.fuse(divider);
+    }
+
+    return result;
 }
 

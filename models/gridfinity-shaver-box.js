@@ -178,11 +178,12 @@ export default async function build(replicad) {
 
     const positionedCutout = wallCutout.translate([cutoutX, cutoutY, cutoutZ]);
 
-    // Cut the box with the positioned cutout
-    box = box.cut(positionedCutout);
-
-    return base
+    // Fuse all parts together first
+    let result = base
         .fuse(box, { optimisation: "commonFace" })
         .fuse(top, { optimisation: "commonFace" });
+
+    // Apply wall cutout to the entire fused model (including stacking lips)
+    return result.cut(positionedCutout);
 }
 

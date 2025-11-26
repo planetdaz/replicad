@@ -23,7 +23,7 @@ export default async function build(replicad) {
 
     // Divider configuration
     const dividerEnabled = true;      // Enable/disable the divider
-    const dividerThickness = 2;       // Thickness of the divider wall (mm)
+    const dividerThickness = 1;       // Thickness of the divider wall (mm)
     const dividerFromBack = 20;       // Distance from back wall to the divider (mm)
 
     // Gridfinity magic numbers

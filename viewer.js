@@ -52,12 +52,12 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
 scene.add(ambientLight);
 
 // Grid helper - darker lines for light background
-const gridHelper = new THREE.GridHelper(100, 20, 0x888888, 0xcccccc);
+const gridHelper = new THREE.GridHelper(300, 20, 0x888888, 0xcccccc);
 scene.add(gridHelper);
 
 // Axes helper - rotate to match model orientation
 // Red=X, Green=Y, Blue=Z
-const axesHelper = new THREE.AxesHelper(30);
+const axesHelper = new THREE.AxesHelper(300);
 axesHelper.rotation.x = -Math.PI / 2; // Rotate to match model orientation
 scene.add(axesHelper);
 
@@ -83,10 +83,33 @@ function createMeshFromData(meshData) {
     const indices = new Uint32Array(meshData.triangles);
     geometry.setIndex(new THREE.BufferAttribute(indices, 1));
 
-    // Create CAD-style material (flat, no lighting effects)
-    const material = new THREE.MeshBasicMaterial({
-        color: 0x3498db, // Bright blue for good contrast on light background
+    // Create CAD-style material with view-dependent shading
+    // Custom shader: single hue (blue) with brightness based on view angle
+    const material = new THREE.ShaderMaterial({
         side: THREE.DoubleSide,
+        uniforms: {
+            baseColor: { value: new THREE.Color(0x3498db) }, // Blue
+        },
+        vertexShader: `
+            varying vec3 vNormal;
+            void main() {
+                // Transform normal to view space for view-dependent shading
+                vNormal = normalize(normalMatrix * normal);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 baseColor;
+            varying vec3 vNormal;
+            void main() {
+                // Brightness based on how much face points toward camera (Z in view space)
+                // abs() ensures backfaces also shade correctly
+                float brightness = abs(vNormal.z);
+                // Remap to avoid pure black: range from 0.3 to 1.0
+                brightness = 0.3 + 0.7 * brightness;
+                gl_FragColor = vec4(baseColor * brightness, 1.0);
+            }
+        `,
     });
 
     // Create mesh

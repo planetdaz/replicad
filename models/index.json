@@ -34,6 +34,12 @@
         "name": "Gridfinity Shaver Box",
         "description": "Gridfinity box (2x3 units, 42mm tall) with side wall cutouts for easy shaver access",
         "file": "./gridfinity-shaver-box.js"
+    },
+    {
+        "id": "christmas-ornament",
+        "name": "Christmas Ornament",
+        "description": "Flat ornament ball with hanging knob for sticker application",
+        "file": "./christmas-ornament.js"
     }
 ]
 

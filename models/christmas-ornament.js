@@ -10,6 +10,7 @@ export default async function build(replicad) {
     const knobWidth = 18;           // Width of the hanging knob (mm)
     const knobHeight = 11.5;          // Height of the knob above the circle (mm)
     const roundoverRadius = 2;      // Radius for roundovers on top corners of knob (mm)
+    const edgeRoundover = 1;        // Radius for roundover on top/bottom edges of extrusion (mm)
     const holeDiameter = 6;         // Diameter of the ribbon hole (mm)
     const holeFromTop = 6;          // Distance from top of knob to hole center (mm)
 
@@ -54,6 +55,13 @@ export default async function build(replicad) {
 
     // Cut the hole from the ornament
     ornament = ornament.cut(hole);
+
+    // Apply edge roundover to top and bottom faces
+    if (edgeRoundover > 0) {
+        ornament = ornament
+            .fillet(edgeRoundover, (e) => e.inPlane("XY", 0))
+            .fillet(edgeRoundover, (e) => e.inPlane("XY", thickness));
+    }
 
     return ornament;
 }

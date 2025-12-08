@@ -52,7 +52,7 @@ self.addEventListener('message', async (event) => {
             const shape = await buildModel(modelId);
 
             // Get mesh data for rendering
-            const mesh = shape.mesh({ tolerance: 0.1, angularTolerance: 30 });
+            const mesh = shape.mesh({ tolerance: 0.015, angularTolerance: 5 });
             const meshes = [{
                 vertices: Array.from(mesh.vertices),
                 triangles: Array.from(mesh.triangles),

@@ -69,7 +69,7 @@ export default async function build(replicad) {
 
             // Rotate notchCutout around Z axis to desired angle
             if (angleDeg && angleDeg !== 0) {
-                notchCutout = notchCutout.rotate([0,0,1], angleDeg);
+                notchCutout = notchCutout.rotate([0, 0, 1], angleDeg);
             }
 
             result = result.cut(notchCutout);

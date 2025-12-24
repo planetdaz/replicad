@@ -4,16 +4,22 @@
 export default async function build(replicad) {
     const { drawCircle, drawRoundedRectangle } = replicad;
 
+
     // Vent ring dimensions
     const outerDiameter = 41;
     const innerDiameter = 36.5;
     const height = 15;
 
+    // Lip parameters
+    const hasLip = true;           // if true, add a lip inside the ring
+    const lipInnerDiameter = 32;   // inner diameter of the lip (mm)
+    const lipHeight = 2.5;         // height of the lip (mm)
+
     // Notch parameters
-    const hasNotch = true;       // if true, cut out a notch on top of the ring
+    const hasNotch = true;         // if true, cut out a notch on top of the ring
     const notchWidth = 23.5;       // width of notch in mm (straight line, not circumferential)
-    const notchDepth = 12;        // depth of the notch from the top of the ring
-    const notchFillet = 1;       // mm of roundover on top edges of notch (0 = no roundover)
+    const notchDepth = 12;         // depth of the notch from the top of the ring
+    const notchFillet = 1;         // mm of roundover on top edges of notch (0 = no roundover)
 
     // Calculate radii
     const outerRadius = outerDiameter / 2;
@@ -25,8 +31,21 @@ export default async function build(replicad) {
     // Create inner cylinder (hole)
     const innerCylinder = drawCircle(innerRadius).sketchOnPlane().extrude(height);
 
+
     // Subtract inner from outer to create ring
     let result = outerCylinder.cut(innerCylinder);
+
+    // Add lip if enabled
+    if (hasLip) {
+        const lipOuterRadius = innerRadius;
+        const lipInnerRadius = lipInnerDiameter / 2;
+        // The lip sits at the bottom (z = 0)
+        const lipOuter = drawCircle(lipOuterRadius).sketchOnPlane().extrude(lipHeight);
+        const lipInner = drawCircle(lipInnerRadius).sketchOnPlane().extrude(lipHeight);
+        const lip = lipOuter.cut(lipInner);
+        // Union the lip with the main ring
+        result = result.union(lip);
+    }
 
     // Add notch if enabled
     if (hasNotch) {

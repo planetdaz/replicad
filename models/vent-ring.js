@@ -6,20 +6,20 @@ export default async function build(replicad) {
 
 
     // Vent ring dimensions
-    const outerDiameter = 41;
-    const innerDiameter = 36.5;
-    const height = 15;
+    const outerDiameter = 44;   // thick was 51
+    const innerDiameter = 38.5;
+    const height = 6;
 
     // Lip parameters
     const hasLip = true;           // if true, add a lip inside the ring
-    const lipInnerDiameter = 32;   // inner diameter of the lip (mm)
-    const lipHeight = 3;         // height of the lip (mm)
+    const lipInnerDiameter = 35;   // was 33.5 on print #4;   // inner diameter of the lip (mm)
+    const lipHeight = 1;         // height of the lip (mm)
 
     // Notch parameters
     const hasNotch = true;         // if true, cut out a notch on top of the ring
     const notchWidth = 23.5;       // width of notch in mm (straight line, not circumferential)
-    const notchDepth = 12;         // depth of the notch from the top of the ring
-    const notchFillet = 1;         // mm of roundover on top edges of notch (0 = no roundover)
+    const notchDepth = 5;   // was 3 on print #4;         // depth of the notch from the top of the ring
+    const notchFillet = .5;         // mm of roundover on top edges of notch (0 = no roundover)
 
     // Calculate radii
     const outerRadius = outerDiameter / 2;

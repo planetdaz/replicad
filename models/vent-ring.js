@@ -10,9 +10,10 @@ export default async function build(replicad) {
     const height = 5;
 
     // Notch parameters
-    const hasNotch = true;      // if true, cut out a notch on top of the ring
+    const hasNotch = true;       // if true, cut out a notch on top of the ring
     const notchWidth = 18;       // width of notch in mm (straight line, not circumferential)
     const notchDepth = 3;        // depth of the notch from the top of the ring
+    const notchFillet = 1;       // mm of roundover on top edges of notch (0 = no roundover)
 
     // Calculate radii
     const outerRadius = outerDiameter / 2;
@@ -29,22 +30,18 @@ export default async function build(replicad) {
 
     // Add notch if enabled
     if (hasNotch) {
-        // Calculate the notch geometry
-        // The notch width is a chord across the circle
-        // We need the notch to extend from innerRadius to outerRadius with parallel sides
-        const notchLength = outerRadius - innerRadius + 140; // Addextra to ensure clean cut
-        const notchStartY = innerRadius - 61.5; // Start slightly inside inner radius
+        // Notch extends from center of circle (Y=0) to beyond outer edge
+        const notchStartY = 0;
+        const notchEndY = outerRadius + 1;
+        const notchLength = notchEndY - notchStartY;
 
-        // Create a rectangular cutout for the notch
-        // Position it at the top of the ring (centered on Y axis, extending outward in +Y direction)
-        const notchCutout = drawRoundedRectangle(notchWidth, notchLength, 0)
-            .sketchOnPlane("XY", height - notchDepth)
-            .extrude(notchDepth + 1); // Extra height to ensure clean cut through top
+        // Draw rounded rectangle profile on XZ plane, centered at top of ring
+        const notchCutout = drawRoundedRectangle(notchWidth, notchDepth + 1, notchFillet)
+            .sketchOnPlane("XZ", notchStartY)
+            .extrude(notchLength)
+            .translate([0, 0, height - (notchDepth - 1) / 2]);
 
-        // Move the notch to the correct position (at the outer edge of the ring)
-        const notchPositioned = notchCutout.translate([0, notchStartY + notchLength / 2, 0]);
-
-        result = result.cut(notchPositioned);
+        result = result.cut(notchCutout);
     }
 
     return result;

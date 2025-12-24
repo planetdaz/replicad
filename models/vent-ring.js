@@ -19,7 +19,7 @@ export default async function build(replicad) {
     // angleDeg is the angle on the circle (0 = +Y, 90 = +X, 180 = -Y, 270 = -X)
     // Example: 3 notches at 0, 120, 240 degrees
     const notches = [
-        [23.5, 5, 0.5, 0],
+        [23.5, 5, 0.5, 10],
         //[23.5, 5, 0.5, 120],
         //[23.5, 5, 0.5, 240],
     ];
@@ -67,9 +67,10 @@ export default async function build(replicad) {
                 .extrude(notchLength)
                 .translate([0, 0, height - notchDepth + cutoutHeight / 2]);
 
-            // Rotate notchCutout around Z axis to desired angle
+            // Rotate notchCutout around Z axis to desired angle (convert degrees to radians)
             if (angleDeg && angleDeg !== 0) {
-                notchCutout = notchCutout.rotate([0, 0, 1], angleDeg);
+                const angleRad = angleDeg * Math.PI / 180;
+                notchCutout = notchCutout.rotate([0, 0, 1], angleRad);
             }
 
             result = result.cut(notchCutout);

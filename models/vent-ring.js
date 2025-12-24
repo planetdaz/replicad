@@ -22,7 +22,13 @@ export default async function build(replicad) {
             width: 23.5,    // width of notch in mm (straight line, not circumferential)
             depth: 5,       // was 3 on print #4; depth of the notch from the top of the ring
             fillet: 0.5,    // mm of roundover on top edges of notch (0 = no roundover)
-            angle: 225      // rotation angle in degrees (0 = extends along +Y axis, positive = counterclockwise when viewed from top)
+            angle: 0      // rotation angle in degrees (0 = extends along -Y axis, positive = counterclockwise when viewed from top)
+        },
+        {
+            width: 25.5,    // width of notch in mm (straight line, not circumferential)
+            depth: 5,       // was 3 on print #4; depth of the notch from the top of the ring
+            fillet: 0.5,    // mm of roundover on top edges of notch (0 = no roundover)
+            angle: 180      // rotation angle in degrees (0 = extends along +Y axis, positive = counterclockwise when viewed from top)
         }
     ];
 

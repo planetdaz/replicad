@@ -5,8 +5,8 @@ export default async function build(replicad) {
     const { drawCircle } = replicad;
 
     // Vent ring dimensions
-    const outerDiameter = 48.2;
-    const innerDiameter = 46.4;
+    const outerDiameter = 41;
+    const innerDiameter = 36;
     const height = 5;
 
     // Calculate radii

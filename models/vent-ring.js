@@ -11,8 +11,8 @@ export default async function build(replicad) {
 
     // Notch parameters
     const hasNotch = true;       // if true, cut out a notch on top of the ring
-    const notchWidth = 18;       // width of notch in mm (straight line, not circumferential)
-    const notchDepth = 3;        // depth of the notch from the top of the ring
+    const notchWidth = 3;       // width of notch in mm (straight line, not circumferential)
+    const notchDepth = 0.5;        // depth of the notch from the top of the ring
     const notchFillet = 1;       // mm of roundover on top edges of notch (0 = no roundover)
 
     // Calculate radii
@@ -35,11 +35,14 @@ export default async function build(replicad) {
         const notchEndY = outerRadius + 1;
         const notchLength = notchEndY - notchStartY;
 
-        // Draw rounded rectangle profile on XZ plane, centered at top of ring
-        const notchCutout = drawRoundedRectangle(notchWidth, notchDepth + 1, notchFillet)
+        // Use height * 2 for the cutout rectangle so large fillets don't curve back
+        const cutoutHeight = height * 2;
+
+        // Draw rounded rectangle profile on XZ plane, positioned above ring top
+        const notchCutout = drawRoundedRectangle(notchWidth, cutoutHeight, notchFillet)
             .sketchOnPlane("XZ", notchStartY)
             .extrude(notchLength)
-            .translate([0, 0, height - (notchDepth - 1) / 2]);
+            .translate([0, 0, height - notchDepth + cutoutHeight / 2]);
 
         result = result.cut(notchCutout);
     }

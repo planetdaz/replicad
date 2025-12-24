@@ -6,13 +6,13 @@ export default async function build(replicad) {
 
     // Vent ring dimensions
     const outerDiameter = 41;
-    const innerDiameter = 36;
-    const height = 5;
+    const innerDiameter = 36.5;
+    const height = 15;
 
     // Notch parameters
     const hasNotch = true;       // if true, cut out a notch on top of the ring
-    const notchWidth = 3;       // width of notch in mm (straight line, not circumferential)
-    const notchDepth = 0.5;        // depth of the notch from the top of the ring
+    const notchWidth = 23.5;       // width of notch in mm (straight line, not circumferential)
+    const notchDepth = 12;        // depth of the notch from the top of the ring
     const notchFillet = 1;       // mm of roundover on top edges of notch (0 = no roundover)
 
     // Calculate radii

@@ -20,6 +20,7 @@ export default async function build(replicad) {
     const notchWidth = 23.5;       // width of notch in mm (straight line, not circumferential)
     const notchDepth = 5;   // was 3 on print #4;         // depth of the notch from the top of the ring
     const notchFillet = .5;         // mm of roundover on top edges of notch (0 = no roundover)
+    const notchAngle = 225;          // rotation angle in degrees (0 = extends along +Y axis, positive = counterclockwise when viewed from top)
 
     // Calculate radii
     const outerRadius = outerDiameter / 2;
@@ -58,10 +59,15 @@ export default async function build(replicad) {
         const cutoutHeight = height * 2;
 
         // Draw rounded rectangle profile on XZ plane, positioned above ring top
-        const notchCutout = drawRoundedRectangle(notchWidth, cutoutHeight, notchFillet)
+        let notchCutout = drawRoundedRectangle(notchWidth, cutoutHeight, notchFillet)
             .sketchOnPlane("XZ", notchStartY)
             .extrude(notchLength)
             .translate([0, 0, height - notchDepth + cutoutHeight / 2]);
+
+        // Rotate the notch around the Z-axis (center of ring) if angle is specified
+        if (notchAngle !== 0) {
+            notchCutout = notchCutout.rotate(notchAngle, [0, 0, 0], [0, 0, 1]);
+        }
 
         result = result.cut(notchCutout);
     }

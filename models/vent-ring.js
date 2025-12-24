@@ -13,7 +13,7 @@ export default async function build(replicad) {
     // Lip parameters
     const hasLip = true;           // if true, add a lip inside the ring
     const lipInnerDiameter = 32;   // inner diameter of the lip (mm)
-    const lipHeight = 2.5;         // height of the lip (mm)
+    const lipHeight = 3;         // height of the lip (mm)
 
     // Notch parameters
     const hasNotch = true;         // if true, cut out a notch on top of the ring
@@ -43,8 +43,8 @@ export default async function build(replicad) {
         const lipOuter = drawCircle(lipOuterRadius).sketchOnPlane().extrude(lipHeight);
         const lipInner = drawCircle(lipInnerRadius).sketchOnPlane().extrude(lipHeight);
         const lip = lipOuter.cut(lipInner);
-        // Union the lip with the main ring
-        result = result.union(lip);
+        // Fuse the lip with the main ring
+        result = result.fuse(lip);
     }
 
     // Add notch if enabled

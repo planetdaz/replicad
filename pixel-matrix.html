@@ -245,23 +245,22 @@ function drawMatrix() {
         svgContent += circle(cx, cy, outerRadius, "pixel");
         // inner visible area
         svgContent += circle(cx, cy, innerRadius, "safe");
-        // Draw hands if present, clipped to inner circle
+        // Draw hands: always expect 3 angles per cell
         if (grid && grid[r] && grid[r][dc]) {
           const angles = grid[r][dc];
-          if (angles.length === 0) {
-            svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
-          } else {
-            angles.forEach((angle, idx) => {
-              if (angles.length === 3 && idx === 2) {
-                svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
-              } else {
-                svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
-              }
-            });
+          for (let idx = 0; idx < 3; idx++) {
+            const angle = angles[idx];
+            if (idx === 2) {
+              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
+            } else {
+              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
+            }
           }
         } else {
-          // If no grid or no cell, treat as empty pixel
-          svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
+          // If no grid or no cell, treat as empty pixel (should not occur with current DIGITS)
+          for (let idx = 0; idx < 3; idx++) {
+            svgContent += hand(cx, cy, 225, innerRadius * 0.92, idx === 2 ? "hand hand-thin" : "hand");
+          }
         }
       }
     }

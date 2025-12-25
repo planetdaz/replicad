@@ -166,6 +166,7 @@ const DIGITS = {
 // --- Animation and drawing logic ---
 let timeDigits = ["1", "2", ":", "3", "0"];
 let prevGrid = null;
+let animationFrameId = null;
 
 function randomTimeDigits() {
   // Generate random hour (1-12) and minute (00-59) for 12-hour clock
@@ -230,8 +231,9 @@ function drawMatrix() {
     }
   }
   // Animate hands from prevGrid to nextGrid
-  const duration = 5000;
+  const duration = 3000;
   const start = performance.now();
+  if (!prevGrid) prevGrid = nextGrid.map(cell => [...cell]);
   function lerp(a, b, t) { return a + (b - a) * t; }
   function lerpAngle(a, b, t) {
     let diff = ((b - a + 540) % 360) - 180;
@@ -270,30 +272,45 @@ function drawMatrix() {
         const nextAngle = nextCell[idx];
         const prevStyle = prevCell[3] || 1;
         const nextStyle = nextCell[3] || 1;
-        // Animate angle
-        const angle = lerpAngle(prevAngle, nextAngle, t);
-        // Animate style
-        const style = t < 1 ? prevStyle : nextStyle;
-        // Animate length and color
-        let length, color;
-        if (style === 2) {
-          length = innerRadius * 0.65;
-          color = lerpColor(prevStyle === 2 ? color2 : color1, color2, t);
-        } else {
-          length = innerRadius * 0.92;
-          color = lerpColor(prevStyle === 2 ? color2 : color1, color1, t);
-        }
+        // Interpolate angle, length, and color
+        const styleT = t;
+        // Angle tween
+        const angle = lerpAngle(prevAngle, nextAngle, styleT);
+        // Style interpolation
+        const style = styleT < 1 ? prevStyle : nextStyle;
+        // Length tween
+        const prevLength = prevStyle === 2 ? innerRadius * 0.65 : innerRadius * 0.92;
+        const nextLength = nextStyle === 2 ? innerRadius * 0.65 : innerRadius * 0.92;
+        const length = lerp(prevLength, nextLength, styleT);
+        // Color tween
+        const prevColorArr = prevStyle === 2 ? color2 : color1;
+        const nextColorArr = nextStyle === 2 ? color2 : color1;
+        const color = lerpColor(prevColorArr, nextColorArr, styleT);
         let cls = "hand";
-        if (style === 2) cls = "hand-placeholder";
-        else if (idx === 2) cls = "hand hand-thin";
-        svgContent += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos((angle-90)*Math.PI/180)*length}" y2="${cy + Math.sin((angle-90)*Math.PI/180)*length}" style="stroke:${color};stroke-width:${cls.includes('thin')?2.4:(cls.includes('placeholder')?2:3)}" class="${cls}" />`;
+        if (styleT < 1) {
+          cls = prevStyle === 2 ? "hand-placeholder" : (idx === 2 ? "hand hand-thin" : "hand");
+        } else {
+          cls = nextStyle === 2 ? "hand-placeholder" : (idx === 2 ? "hand hand-thin" : "hand");
+        }
+        // Line thickness tween
+        const prevThickness = prevStyle === 2 ? 2 : (idx === 2 ? 2.4 : 3);
+        const nextThickness = nextStyle === 2 ? 2 : (idx === 2 ? 2.4 : 3);
+        const thickness = lerp(prevThickness, nextThickness, styleT);
+        // Tween or unify line ending style
+        // We'll use 'round' for all hands during transition for visual consistency
+        const linecap = 'round';
+        svgContent += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos((angle-90)*Math.PI/180)*length}" y2="${cy + Math.sin((angle-90)*Math.PI/180)*length}" style="stroke:${color};stroke-width:${thickness};stroke-linecap:${linecap}" class="${cls}" />`;
       }
     }
     svg.innerHTML = svgContent;
-    if (t < 1) requestAnimationFrame(renderFrame);
+    if (t < 1) animationFrameId = requestAnimationFrame(renderFrame);
+    else {
+      animationFrameId = null;
+      prevGrid = nextGrid;
+    }
   }
-  requestAnimationFrame(renderFrame);
-  prevGrid = nextGrid;
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  animationFrameId = requestAnimationFrame(renderFrame);
 }
 
 // Initial draw

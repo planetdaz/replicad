@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -79,9 +80,10 @@ function hand(cx, cy, angleDeg, length, cls="hand") {
   return `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" class="${cls}" />`;
 }
 
-/* ---- Digit hand definitions for 2x3 grid per digit ---- */
-/* Each digit is a 3x2 grid: [ [row0col0, row0col1], [row1col0, row1col1], [row2col0, row2col1] ]
-   Angles: 0=up, 90=right, 180=down, 270=left */
+
+// ---- Digit hand definitions for 2x3 grid per digit ----
+// Each digit is a 3x2 grid: [ [row0col0, row0col1], [row1col0, row1col1], [row2col0, row2col1] ]
+// Angles: 0=up, 90=right, 180=down, 270=left
 const DIGITS = {
   "0": [ [[90,180],[180,270]], [[0,180],[0,180]], [[0,90],[0,270]] ],
   "1": [ [[],[180]], [[],[0,180]], [[],[0]] ],
@@ -95,51 +97,73 @@ const DIGITS = {
   "9": [ [[90,180],[180,270]], [[0,90],[0, 180,270]], [[0,90],[0,270]] ]
 };
 
-/* Example time: 12:34 */
-const timeDigits = ["1", "2", "3", "4"];
+// --- Animation and drawing logic ---
+let timeDigits = ["1", "2", "3", "0"];
 
-/* ---- Draw pixels ---- */
-let svgContent = "";
+function randomTimeDigits() {
+  // Generate random hour (00-23) and minute (00-59)
+  const hour = Math.floor(Math.random() * 24);
+  const minute = Math.floor(Math.random() * 60);
+  // Pad with zeros and split into digit array
+  return [
+    String(hour).padStart(2, '0')[0],
+    String(hour).padStart(2, '0')[1],
+    String(minute).padStart(2, '0')[0],
+    String(minute).padStart(2, '0')[1]
+  ];
+}
 
-// Bounding outline
-svgContent += `
-  <rect
-    x="${margin - 10}"
-    y="${margin - 10}"
-    width="${width - (margin - 10) * 2}"
-    height="${height - (margin - 10) * 2}"
-    class="outline"
-  />
-`;
+function drawMatrix() {
+  let svgContent = "";
 
-for (let r = 0; r < rows; r++) {
-  for (let c = 0; c < cols; c++) {
+  // Bounding outline
+  svgContent += `
+    <rect
+      x="${margin - 10}"
+      y="${margin - 10}"
+      width="${width - (margin - 10) * 2}"
+      height="${height - (margin - 10) * 2}"
+      class="outline"
+    />
+  `;
 
-    const cx = margin + visibleRadius + c * spacing;
-    const cy = margin + visibleRadius + r * spacing;
-
-    // visible area
-    svgContent += circle(cx, cy, visibleRadius, "pixel");
-
-    // safe radius (118 px equivalent)
-    svgContent += circle(cx, cy, visibleRadius * (118 / 120), "safe");
-
-    // Determine which digit this pixel belongs to (2 columns per digit)
-    const digitIndex = Math.floor(c / 2);
-    const digitCol = c % 2;
-    if (digitIndex < timeDigits.length) {
-      const digit = timeDigits[digitIndex];
-      const grid = DIGITS[digit];
-      if (grid && grid[r] && grid[r][digitCol]) {
-        grid[r][digitCol].forEach(angle => {
-          svgContent += hand(cx, cy, angle, visibleRadius * 0.92);
-        });
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = margin + visibleRadius + c * spacing;
+      const cy = margin + visibleRadius + r * spacing;
+      // visible area
+      svgContent += circle(cx, cy, visibleRadius, "pixel");
+      // safe radius (118 px equivalent)
+      svgContent += circle(cx, cy, visibleRadius * (118 / 120), "safe");
+      // Determine which digit this pixel belongs to (2 columns per digit)
+      const digitIndex = Math.floor(c / 2);
+      const digitCol = c % 2;
+      if (digitIndex < timeDigits.length) {
+        const digit = timeDigits[digitIndex];
+        const grid = DIGITS[digit];
+        if (grid && grid[r] && grid[r][digitCol]) {
+          grid[r][digitCol].forEach(angle => {
+            svgContent += hand(cx, cy, angle, visibleRadius * 0.92);
+          });
+        }
       }
     }
   }
+  svg.innerHTML = svgContent;
 }
 
-svg.innerHTML = svgContent;
+// Initial draw
+drawMatrix();
+
+// Animate every 5 seconds
+setInterval(() => {
+  timeDigits = randomTimeDigits();
+  drawMatrix();
+}, 5000);
+
+
+
+/* ---- Draw pixels ---- */
 </script>
 
 </body>

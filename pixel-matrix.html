@@ -58,9 +58,11 @@ const innerRadius = visibleDiameter / 2;
 const spacing = 46.75; // center-to-center distance in mm
 
 /* ---- SVG sizing ---- */
+
+const outlineGap = cylinderGap * 3; // triple gap for outline
 const margin = cylinderGap; // gap between outline and edge circles
-const width = spacing * (cols - 1) + cylinderOD + margin * 2;
-const height = spacing * (rows - 1) + cylinderOD + margin * 2;
+const width = spacing * (cols - 1) + cylinderOD + margin * 2 + outlineGap * 2;
+const height = spacing * (rows - 1) + cylinderOD + margin * 2 + outlineGap * 2;
 
 const svg = document.getElementById("svg");
 svg.style.width = "100vw";
@@ -103,8 +105,8 @@ const DIGITS = {
 let timeDigits = ["1", "2", ":", "3", "0"];
 
 function randomTimeDigits() {
-  // Generate random hour (00-23) and minute (00-59)
-  const hour = Math.floor(Math.random() * 24);
+  // Generate random hour (1-12) and minute (00-59) for 12-hour clock
+  const hour = Math.floor(Math.random() * 12) + 1;
   const minute = Math.floor(Math.random() * 60);
   // Remove leading zero for single-digit hour
   const hourStr = String(hour);
@@ -135,17 +137,18 @@ function drawMatrix() {
   }
 
   // Recompute width and update SVG size
-  const dynamicWidth = spacing * (totalCols - 1) + cylinderOD + margin * 2;
-  svg.setAttribute("viewBox", `0 0 ${dynamicWidth} ${height}`);
+  const dynamicWidth = spacing * (totalCols - 1) + cylinderOD + margin * 2 + outlineGap * 2;
+  const dynamicHeight = spacing * (rows - 1) + cylinderOD + margin * 2 + outlineGap * 2;
+  svg.setAttribute("viewBox", `0 0 ${dynamicWidth} ${dynamicHeight}`);
 
   let svgContent = "";
   // Bounding outline
   svgContent += `
     <rect
-      x="${margin}"
-      y="${margin}"
-      width="${dynamicWidth - margin * 2}"
-      height="${height - margin * 2}"
+      x="${margin - outlineGap}"
+      y="${margin - outlineGap}"
+      width="${dynamicWidth - (margin - outlineGap) * 2}"
+      height="${dynamicHeight - (margin - outlineGap) * 2}"
       class="outline"
     />
   `;
@@ -154,8 +157,8 @@ function drawMatrix() {
   let colCursor = 0;
   for (; colCursor < leftPad; colCursor++) {
     for (let r = 0; r < rows; r++) {
-      const cx = margin + outerRadius + colCursor * spacing;
-      const cy = margin + outerRadius + r * spacing;
+      const cx = margin + outerRadius + colCursor * spacing + outlineGap;
+      const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
     }
@@ -167,8 +170,8 @@ function drawMatrix() {
     const digitCols = (digit === '1' || digit === ':') ? 1 : 2;
     for (let dc = 0; dc < digitCols; dc++) {
       for (let r = 0; r < rows; r++) {
-        const cx = margin + outerRadius + (colCursor + dc) * spacing;
-        const cy = margin + outerRadius + r * spacing;
+        const cx = margin + outerRadius + (colCursor + dc) * spacing + outlineGap;
+        const cy = margin + outerRadius + r * spacing + outlineGap;
         // outer circle
         svgContent += circle(cx, cy, outerRadius, "pixel");
         // inner visible area
@@ -186,8 +189,8 @@ function drawMatrix() {
   // Pad with empty columns if needed (right side)
   for (; colCursor < totalCols; colCursor++) {
     for (let r = 0; r < rows; r++) {
-      const cx = margin + outerRadius + colCursor * spacing;
-      const cy = margin + outerRadius + r * spacing;
+      const cx = margin + outerRadius + colCursor * spacing + outlineGap;
+      const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
     }

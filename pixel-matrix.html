@@ -97,59 +97,65 @@ function hand(cx, cy, angleDeg, length, cls="hand") {
 const DIGITS = {
   // ':' is a single column, dots in top and bottom row
   ":": [
-    [180, 180, 180],
-    [],
-    [0, 0, 0]
+    [[180, 180, 180]],
+    [[225, 225, 225]],
+    [[0, 0, 0]]
+  ],
+  // ' ' (space) is a single column, all 225° hands
+  " ": [
+    [[225, 225, 225]],
+    [[225, 225, 225]],
+    [[225, 225, 225]]
   ],
   "0": [
-    [90, 180, 180], [180, 270, 270],
-    [0, 180, 180], [0, 180, 180],
-    [0, 90, 90], [0, 270, 270]
+    [[90, 180, 180], [180, 270, 270]],
+    [[0, 180, 180], [0, 180, 180]],
+    [[0, 90, 90], [0, 270, 270]]
   ],
   "1": [
-    [180, 180, 180],
-    [0, 180, 180],
-    [0, 0, 0]
+    [[180, 180, 180]],
+    [[0, 180, 180]],
+    [[0, 0, 0]]
   ],
   "2": [
-    [90, 90, 90], [270, 180, 270],
-    [90, 180, 180], [0, 270, 0],
-    [0, 90, 90], [270, 270, 270]
+    [[90, 90, 90], [270, 180, 270]],
+    [[90, 180, 180], [0, 270, 0]],
+    [[0, 90, 90], [270, 270, 270]]
   ],
   "3": [
-    [90, 90, 90], [270, 180, 270],
-    [90, 90, 90], [0, 180, 270],
-    [90, 90, 90], [0, 270, 0]
+    [[90, 90, 90], [270, 180, 270]],
+    [[90, 90, 90], [0, 180, 270]],
+    [[90, 90, 90], [0, 270, 0]]
   ],
   "4": [
-    [180, 180, 180], [180, 180, 180],
-    [0, 90, 90], [0, 180, 270],
-    [], [0, 0, 0]
+    [[180, 180, 180], [180, 180, 180]],
+    [[0, 90, 90], [0, 180, 270]],
+    [[225, 225, 225], [0, 0, 0]]
   ],
   "5": [
-    [90, 180, 180], [270, 270, 270],
-    [0, 90, 90], [270, 180, 270],
-    [0, 90, 90], [0, 270, 0]
+    [[90, 180, 180], [270, 270, 270]],
+    [[0, 90, 90], [270, 180, 270]],
+    [[0, 90, 90], [0, 270, 0]]
   ],
   "6": [
-    [180, 90, 90], [270, 180, 270],
-    [0, 90, 180], [270, 180, 270],
-    [0, 90, 90], [0, 270, 0]
+    [[180, 90, 90], [270, 180, 270]],
+    [[0, 90, 180], [270, 180, 270]],
+    [[0, 90, 90], [0, 270, 0]]
   ],
   "7": [
-    [90, 180, 180], [180, 270, 270],
-    [], [0, 180, 180],
-    [], [0, 0, 0]
+    [[90, 180, 180], [180, 270, 270]],
+    [[225, 225, 225], [0, 180, 180]],
+    [[225, 225, 225], [0, 0, 0]]
   ],
   "8": [
-    [90, 180, 180], [180, 270, 270],
-    [0, 90, 180], [0, 180, 270],
-    [0, 90, 90], [0, 270, 0]
+    [[90, 180, 180], [180, 270, 270]],
+    [[0, 90, 180], [0, 180, 270]],
+    [[0, 90, 90], [0, 270, 0]]
   ],
   "9": [
-    [90, 180, 180], [180, 270, 270],
-    [0, 90, 90], [0, 180, 270],
-    [0, 90, 90], [0, 270, 0]
+    [[90, 180, 180], [180, 270, 270]],
+    [[0, 90, 90], [0, 180, 270]],
+    [[0, 90, 90], [0, 270, 0]]
   ]
 };
 
@@ -205,15 +211,25 @@ function drawMatrix() {
     />
   `;
 
-  // Render left pad as empty columns (circles, no hands)
+  // Render left pad as empty columns (draw as ' ' chars)
   let colCursor = 0;
   for (; colCursor < leftPad; colCursor++) {
+    const grid = DIGITS[" "];
     for (let r = 0; r < rows; r++) {
       const cx = margin + outerRadius + colCursor * spacing + outlineGap;
       const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
-      svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
+      // Draw hands for space char
+      if (grid && grid[r] && grid[r][0]) {
+        grid[r][0].forEach((angle, idx) => {
+          if (grid[r][0].length === 3 && idx === 2) {
+            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
+          } else {
+            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
+          }
+        });
+      }
     }
   }
   // Render each digit, advancing by 2 columns for most, 1 for '1' or ':'
@@ -251,14 +267,24 @@ function drawMatrix() {
     }
     colCursor += digitCols;
   }
-  // Pad with empty columns if needed (right side)
+  // Pad with empty columns if needed (right side, draw as ' ' chars)
   for (; colCursor < totalCols; colCursor++) {
+    const grid = DIGITS[" "];
     for (let r = 0; r < rows; r++) {
       const cx = margin + outerRadius + colCursor * spacing + outlineGap;
       const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
-      svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
+      // Draw hands for space char
+      if (grid && grid[r] && grid[r][0]) {
+        grid[r][0].forEach((angle, idx) => {
+          if (grid[r][0].length === 3 && idx === 2) {
+            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
+          } else {
+            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
+          }
+        });
+      }
     }
   }
   svg.innerHTML = svgContent;

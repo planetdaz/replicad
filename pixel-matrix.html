@@ -220,15 +220,20 @@ function drawMatrix() {
       const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
-      // Draw hands for space char
-      if (grid && grid[r] && grid[r][0]) {
-        grid[r][0].forEach((angle, idx) => {
-          if (grid[r][0].length === 3 && idx === 2) {
+      // Draw hands for space char (style-aware)
+      const cell = grid[r][0];
+      const style = cell[3] || 1;
+      for (let idx = 0; idx < 3; idx++) {
+        const angle = cell[idx];
+        if (style === 2) {
+          svgContent += hand(cx, cy, angle, innerRadius * 0.65, "hand-placeholder");
+        } else {
+          if (idx === 2) {
             svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
           } else {
             svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
           }
-        });
+        }
       }
     }
   }
@@ -274,15 +279,20 @@ function drawMatrix() {
       const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
-      // Draw hands for space char
-      if (grid && grid[r] && grid[r][0]) {
-        grid[r][0].forEach((angle, idx) => {
-          if (grid[r][0].length === 3 && idx === 2) {
+      // Draw hands for space char (style-aware)
+      const cell = grid[r][0];
+      const style = cell[3] || 1;
+      for (let idx = 0; idx < 3; idx++) {
+        const angle = cell[idx];
+        if (style === 2) {
+          svgContent += hand(cx, cy, angle, innerRadius * 0.65, "hand-placeholder");
+        } else {
+          if (idx === 2) {
             svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
           } else {
             svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
           }
-        });
+        }
       }
     }
   }

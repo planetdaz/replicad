@@ -33,6 +33,9 @@
       stroke-width: 3;
       stroke-linecap: round;
     }
+    .hand-thin {
+      stroke-width: 1.5;
+    }
     .outline {
       stroke: #000;
       stroke-width: 2;
@@ -178,8 +181,13 @@ function drawMatrix() {
         svgContent += circle(cx, cy, innerRadius, "safe");
         // Draw hands if present, clipped to inner circle
         if (grid && grid[r] && grid[r][dc]) {
-          grid[r][dc].forEach(angle => {
-            svgContent += hand(cx, cy, angle, innerRadius * 0.92);
+          const angles = grid[r][dc];
+          angles.forEach((angle, idx) => {
+            if (angles.length === 3 && idx === 2) {
+              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
+            } else {
+              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
+            }
           });
         }
       }

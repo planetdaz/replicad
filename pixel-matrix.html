@@ -91,9 +91,13 @@ function hand(cx, cy, angleDeg, length, cls="hand") {
 
 
 // ---- Digit hand definitions ----
-// Most digits use a 3x2 grid: [ [row0col0, row0col1], [row1col0, row1col1], [row2col0, row2col1] ]
-// ':' and '1' use a 3x1 grid: [row0, row1, row2]
-// Angles: 0=up, 90=right, 180=down, 270=left
+// Each digit is defined as a grid of rows and columns:
+// - Most digits use a 3x2 grid: [ [row0col0, row0col1], [row1col0, row1col1], [row2col0, row2col1] ]
+// - ':' and '1' use a 3x1 grid: [ [row0], [row1], [row2] ]
+// Each cell is an array: [angle1, angle2, angle3, style?]
+//   - angle1, angle2, angle3: degrees for the 3 hands in that pixel (always present)
+//   - style (optional): 1 = normal hands, 2 = short/light gray hands
+// Angles: 0=up, 90=right, 180=down, 225=empty, 270=left
 const DIGITS = {
   // ':' is a single column, dots in top and bottom row
   ":": [
@@ -161,6 +165,7 @@ const DIGITS = {
 
 // --- Animation and drawing logic ---
 let timeDigits = ["1", "2", ":", "3", "0"];
+let prevGrid = null;
 
 function randomTimeDigits() {
   // Generate random hour (1-12) and minute (00-59) for 12-hour clock
@@ -180,123 +185,110 @@ function randomTimeDigits() {
 }
 
 function drawMatrix() {
-  // Calculate total columns needed for the current timeDigits
+  // --- Animation-aware rendering ---
+  // Build prevGrid and nextGrid for animation
   let digitColWidths = timeDigits.map(d => (d === '1' || d === ':') ? 1 : 2);
   let renderedCols = digitColWidths.reduce((a, b) => a + b, 0);
   let totalCols = Math.max(renderedCols, 8);
   let emptyCols = totalCols - renderedCols;
-
-  // Calculate left pad for centering or right-justifying
   let leftPad = 0;
   if (emptyCols === 1) {
-    leftPad = 1; // right justify
+    leftPad = 1;
   } else if (emptyCols > 1) {
-    leftPad = Math.ceil(emptyCols / 2); // center, extra on left
+    leftPad = Math.ceil(emptyCols / 2);
   }
-
-  // Recompute width and update SVG size
-  const dynamicWidth = spacing * (totalCols - 1) + cylinderOD + margin * 2 + outlineGap * 2;
-  const dynamicHeight = spacing * (rows - 1) + cylinderOD + margin * 2 + outlineGap * 2;
-  svg.setAttribute("viewBox", `0 0 ${dynamicWidth} ${dynamicHeight}`);
-
-  let svgContent = "";
-  // Bounding outline
-  svgContent += `
-    <rect
-      x="${margin - outlineGap}"
-      y="${margin - outlineGap}"
-      width="${dynamicWidth - (margin - outlineGap) * 2}"
-      height="${dynamicHeight - (margin - outlineGap) * 2}"
-      class="outline"
-    />
-  `;
-
-  // Render left pad as empty columns (draw as ' ' chars)
+  // Build nextGrid: [col][row] = [angle1, angle2, angle3, style]
+  let nextGrid = [];
   let colCursor = 0;
+  // Left pad
   for (; colCursor < leftPad; colCursor++) {
-    const grid = DIGITS[" "];
     for (let r = 0; r < rows; r++) {
-      const cx = margin + outerRadius + colCursor * spacing + outlineGap;
-      const cy = margin + outerRadius + r * spacing + outlineGap;
-      svgContent += circle(cx, cy, outerRadius, "pixel");
-      svgContent += circle(cx, cy, innerRadius, "safe");
-      // Draw hands for space char (style-aware)
-      const cell = grid[r][0];
-      const style = cell[3] || 1;
-      for (let idx = 0; idx < 3; idx++) {
-        const angle = cell[idx];
-        if (style === 2) {
-          svgContent += hand(cx, cy, angle, innerRadius * 0.65, "hand-placeholder");
-        } else {
-          if (idx === 2) {
-            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
-          } else {
-            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
-          }
-        }
-      }
+      nextGrid.push([colCursor, r, DIGITS[" "][r][0]]);
     }
   }
-  // Render each digit, advancing by 2 columns for most, 1 for '1' or ':'
+  // Digits
   for (let digitIndex = 0; digitIndex < timeDigits.length; digitIndex++) {
     const digit = timeDigits[digitIndex];
     const grid = DIGITS[digit];
     const digitCols = (digit === '1' || digit === ':') ? 1 : 2;
     for (let dc = 0; dc < digitCols; dc++) {
       for (let r = 0; r < rows; r++) {
-        const cx = margin + outerRadius + (colCursor + dc) * spacing + outlineGap;
-        const cy = margin + outerRadius + r * spacing + outlineGap;
-        // outer circle
-        svgContent += circle(cx, cy, outerRadius, "pixel");
-        // inner visible area
-        svgContent += circle(cx, cy, innerRadius, "safe");
-        // Draw hands: always expect 3 angles per cell, optional 4th style param
-        const cell = grid[r][dc];
-        const style = cell[3] || 1;
-        for (let idx = 0; idx < 3; idx++) {
-          const angle = cell[idx];
-          if (style === 2) {
-            // Style 2: all hands short and light gray
-            svgContent += hand(cx, cy, angle, innerRadius * 0.65, "hand-placeholder");
-          } else {
-            // Style 1: normal hands
-            if (idx === 2) {
-              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
-            } else {
-              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
-            }
-          }
-        }
+        nextGrid.push([colCursor + dc, r, grid[r][dc]]);
       }
     }
     colCursor += digitCols;
   }
-  // Pad with empty columns if needed (right side, draw as ' ' chars)
+  // Right pad
   for (; colCursor < totalCols; colCursor++) {
-    const grid = DIGITS[" "];
     for (let r = 0; r < rows; r++) {
-      const cx = margin + outerRadius + colCursor * spacing + outlineGap;
-      const cy = margin + outerRadius + r * spacing + outlineGap;
-      svgContent += circle(cx, cy, outerRadius, "pixel");
-      svgContent += circle(cx, cy, innerRadius, "safe");
-      // Draw hands for space char (style-aware)
-      const cell = grid[r][0];
-      const style = cell[3] || 1;
-      for (let idx = 0; idx < 3; idx++) {
-        const angle = cell[idx];
-        if (style === 2) {
-          svgContent += hand(cx, cy, angle, innerRadius * 0.65, "hand-placeholder");
-        } else {
-          if (idx === 2) {
-            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
-          } else {
-            svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
-          }
-        }
-      }
+      nextGrid.push([colCursor, r, DIGITS[" "][r][0]]);
     }
   }
-  svg.innerHTML = svgContent;
+  // Animate hands from prevGrid to nextGrid
+  const duration = 300;
+  const start = performance.now();
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpAngle(a, b, t) {
+    let diff = ((b - a + 540) % 360) - 180;
+    return (a + diff * t + 360) % 360;
+  }
+  function lerpColor(c1, c2, t) {
+    // c1, c2: [r,g,b]
+    return `rgb(${Math.round(lerp(c1[0],c2[0],t))},${Math.round(lerp(c1[1],c2[1],t))},${Math.round(lerp(c1[2],c2[2],t))})`;
+  }
+  // Color definitions
+  const color1 = [17,17,17]; // #111
+  const color2 = [204,204,204]; // #ccc
+  // Render function
+  function renderFrame(now) {
+    let t = Math.min((now - start) / duration, 1);
+    let svgContent = "";
+    svgContent += `
+      <rect
+        x="${margin - outlineGap}"
+        y="${margin - outlineGap}"
+        width="${dynamicWidth - (margin - outlineGap) * 2}"
+        height="${dynamicHeight - (margin - outlineGap) * 2}"
+        class="outline"
+      />
+    `;
+    for (let i = 0; i < nextGrid.length; i++) {
+      const [col, row, nextCell] = nextGrid[i];
+      let prevCell = prevGrid && prevGrid[i] ? prevGrid[i][2] : nextCell;
+      const cx = margin + outerRadius + col * spacing + outlineGap;
+      const cy = margin + outerRadius + row * spacing + outlineGap;
+      svgContent += circle(cx, cy, outerRadius, "pixel");
+      svgContent += circle(cx, cy, innerRadius, "safe");
+      // Animate each hand
+      for (let idx = 0; idx < 3; idx++) {
+        const prevAngle = prevCell[idx];
+        const nextAngle = nextCell[idx];
+        const prevStyle = prevCell[3] || 1;
+        const nextStyle = nextCell[3] || 1;
+        // Animate angle
+        const angle = lerpAngle(prevAngle, nextAngle, t);
+        // Animate style
+        const style = t < 1 ? prevStyle : nextStyle;
+        // Animate length and color
+        let length, color;
+        if (style === 2) {
+          length = innerRadius * 0.65;
+          color = lerpColor(prevStyle === 2 ? color2 : color1, color2, t);
+        } else {
+          length = innerRadius * 0.92;
+          color = lerpColor(prevStyle === 2 ? color2 : color1, color1, t);
+        }
+        let cls = "hand";
+        if (style === 2) cls = "hand-placeholder";
+        else if (idx === 2) cls = "hand hand-thin";
+        svgContent += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos((angle-90)*Math.PI/180)*length}" y2="${cy + Math.sin((angle-90)*Math.PI/180)*length}" style="stroke:${color};stroke-width:${cls.includes('thin')?2.4:(cls.includes('placeholder')?2:3)}" class="${cls}" />`;
+      }
+    }
+    svg.innerHTML = svgContent;
+    if (t < 1) requestAnimationFrame(renderFrame);
+  }
+  requestAnimationFrame(renderFrame);
+  prevGrid = nextGrid;
 }
 
 // Initial draw

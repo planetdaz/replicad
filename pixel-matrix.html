@@ -197,6 +197,11 @@ function drawMatrix() {
   } else if (emptyCols > 1) {
     leftPad = Math.ceil(emptyCols / 2);
   }
+  // Calculate dynamicWidth and dynamicHeight for animation
+  const dynamicWidth = spacing * (totalCols - 1) + cylinderOD + margin * 2 + outlineGap * 2;
+  const dynamicHeight = spacing * (rows - 1) + cylinderOD + margin * 2 + outlineGap * 2;
+  svg.setAttribute("viewBox", `0 0 ${dynamicWidth} ${dynamicHeight}`);
+
   // Build nextGrid: [col][row] = [angle1, angle2, angle3, style]
   let nextGrid = [];
   let colCursor = 0;
@@ -225,7 +230,7 @@ function drawMatrix() {
     }
   }
   // Animate hands from prevGrid to nextGrid
-  const duration = 300;
+  const duration = 5000;
   const start = performance.now();
   function lerp(a, b, t) { return a + (b - a) * t; }
   function lerpAngle(a, b, t) {

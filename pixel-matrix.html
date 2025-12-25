@@ -11,6 +11,10 @@
     svg {
       background: white;
       border: 1px solid #ccc;
+      width: 100vw;
+      height: auto;
+      display: block;
+      max-width: 100%;
     }
     .pixel {
       stroke: #4da3ff;
@@ -59,7 +63,7 @@ const width = spacing * (cols - 1) + visibleDiameter + margin * 2;
 const height = spacing * (rows - 1) + visibleDiameter + margin * 2;
 
 const svg = document.getElementById("svg");
-svg.setAttribute("width", width);
+svg.removeAttribute("width");
 svg.setAttribute("height", height);
 svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
@@ -128,7 +132,7 @@ for (let r = 0; r < rows; r++) {
       const grid = DIGITS[digit];
       if (grid && grid[r] && grid[r][digitCol]) {
         grid[r][digitCol].forEach(angle => {
-          svgContent += hand(cx, cy, angle, visibleRadius * 0.75);
+          svgContent += hand(cx, cy, angle, visibleRadius * 0.92);
         });
       }
     }

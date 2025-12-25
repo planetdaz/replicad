@@ -34,7 +34,12 @@
       stroke-linecap: round;
     }
     .hand-thin {
-      stroke-width: 1.5;
+      stroke-width: 2.4; /* 80% of 3 */
+      stroke: #111;
+    }
+    .hand-placeholder {
+      stroke: #ccc;
+      stroke-width: 2;
     }
     .outline {
       stroke: #000;
@@ -164,6 +169,7 @@ function drawMatrix() {
       const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
+      svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
     }
   }
   // Render each digit, advancing by 2 columns for most, 1 for '1' or ':'
@@ -182,13 +188,20 @@ function drawMatrix() {
         // Draw hands if present, clipped to inner circle
         if (grid && grid[r] && grid[r][dc]) {
           const angles = grid[r][dc];
-          angles.forEach((angle, idx) => {
-            if (angles.length === 3 && idx === 2) {
-              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
-            } else {
-              svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
-            }
-          });
+          if (angles.length === 0) {
+            svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
+          } else {
+            angles.forEach((angle, idx) => {
+              if (angles.length === 3 && idx === 2) {
+                svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand hand-thin");
+              } else {
+                svgContent += hand(cx, cy, angle, innerRadius * 0.92, "hand");
+              }
+            });
+          }
+        } else {
+          // If no grid or no cell, treat as empty pixel
+          svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
         }
       }
     }
@@ -201,6 +214,7 @@ function drawMatrix() {
       const cy = margin + outerRadius + r * spacing + outlineGap;
       svgContent += circle(cx, cy, outerRadius, "pixel");
       svgContent += circle(cx, cy, innerRadius, "safe");
+      svgContent += hand(cx, cy, 225, innerRadius * 0.65, "hand-placeholder");
     }
   }
   svg.innerHTML = svgContent;
@@ -209,11 +223,22 @@ function drawMatrix() {
 // Initial draw
 drawMatrix();
 
-// Animate every 5 seconds
-setInterval(() => {
+
+// Animate every 5 seconds, and allow space bar to advance
+let timer = setInterval(nextTime, 5000);
+
+function nextTime() {
   timeDigits = randomTimeDigits();
   drawMatrix();
-}, 5000);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    clearInterval(timer);
+    nextTime();
+    timer = setInterval(nextTime, 5000);
+  }
+});
 
 
 

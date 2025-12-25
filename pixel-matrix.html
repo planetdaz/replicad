@@ -233,9 +233,19 @@ function drawMatrix() {
   // Animate hands from prevGrid to nextGrid
   const duration = 3000;
   const start = performance.now();
+  // Store random direction for each hand transition
+  let angleDirections = [];
   if (!prevGrid) prevGrid = nextGrid.map(cell => [...cell]);
+  for (let i = 0; i < nextGrid.length; i++) {
+    angleDirections[i] = [
+      Math.random() < 0.5 ? 1 : -1,
+      Math.random() < 0.5 ? 1 : -1,
+      Math.random() < 0.5 ? 1 : -1
+    ];
+  }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function lerpAngle(a, b, t) {
+    // This function will be overridden in renderFrame to use random direction
     let diff = ((b - a + 540) % 360) - 180;
     return (a + diff * t + 360) % 360;
   }
@@ -274,8 +284,17 @@ function drawMatrix() {
         const nextStyle = nextCell[3] || 1;
         // Interpolate angle, length, and color
         const styleT = t;
-        // Angle tween
-        const angle = lerpAngle(prevAngle, nextAngle, styleT);
+        // Angle tween with random direction (sign only, always ends at target)
+        let diff = ((nextAngle - prevAngle + 540) % 360) - 180;
+        let direction = angleDirections[i][idx];
+        // If direction is wrong, go the other way around the circle
+        if (direction === 1) {
+          // normal shortest path
+          var angle = (prevAngle + diff * styleT + 360) % 360;
+        } else {
+          // go the long way around
+          var angle = (prevAngle - (360 - Math.abs(diff)) * styleT * Math.sign(diff) + 360) % 360;
+        }
         // Style interpolation
         const style = styleT < 1 ? prevStyle : nextStyle;
         // Length tween
@@ -297,7 +316,6 @@ function drawMatrix() {
         const nextThickness = nextStyle === 2 ? 2 : (idx === 2 ? 2.4 : 3);
         const thickness = lerp(prevThickness, nextThickness, styleT);
         // Tween or unify line ending style
-        // We'll use 'round' for all hands during transition for visual consistency
         const linecap = 'round';
         svgContent += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos((angle-90)*Math.PI/180)*length}" y2="${cy + Math.sin((angle-90)*Math.PI/180)*length}" style="stroke:${color};stroke-width:${thickness};stroke-linecap:${linecap}" class="${cls}" />`;
       }

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Virtual Pixel Matrix – Scale Layout</title>
+  <style>
+    body {
+      background: #f5f5f5;
+      font-family: sans-serif;
+    }
+    svg {
+      background: white;
+      border: 1px solid #ccc;
+    }
+    .pixel {
+      stroke: #4da3ff;
+      stroke-width: 1.5;
+      fill: none;
+    }
+    .safe {
+      stroke: #cce6ff;
+      stroke-width: 1;
+      stroke-dasharray: 4 4;
+      fill: none;
+    }
+    .hand {
+      stroke: #111;
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+    .outline {
+      stroke: #000;
+      stroke-width: 2;
+      fill: none;
+    }
+  </style>
+</head>
+<body>
+
+<svg id="svg"></svg>
+
+<script>
+/* ---- Physical parameters (mm) ---- */
+const cols = 8;
+const rows = 3;
+const cylinderOD = 44.0;
+const bezel = 4.7;
+const cylinderGap = 2.75;
+
+/* ---- Derived geometry ---- */
+const visibleDiameter = cylinderOD - 2 * bezel;
+const visibleRadius = visibleDiameter / 2;
+const visibleGap = bezel * 2 + cylinderGap;
+const spacing = visibleDiameter + visibleGap;
+
+/* ---- SVG sizing ---- */
+const margin = 20;
+const width = spacing * (cols - 1) + visibleDiameter + margin * 2;
+const height = spacing * (rows - 1) + visibleDiameter + margin * 2;
+
+const svg = document.getElementById("svg");
+svg.setAttribute("width", width);
+svg.setAttribute("height", height);
+svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+/* ---- Helpers ---- */
+function circle(cx, cy, r, cls) {
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" class="${cls}" />`;
+}
+
+function hand(cx, cy, angleDeg, length, cls="hand") {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  const x2 = cx + Math.cos(rad) * length;
+  const y2 = cy + Math.sin(rad) * length;
+  return `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" class="${cls}" />`;
+}
+
+/* ---- Digit hand definitions (rough HS82-style) ---- */
+/* angles in degrees */
+const DIGITS = {
+  "1": [[0]],
+  "2": [[0, 90]],
+  "3": [[0, 90, 180]],
+  "4": [[90, 180]],
+  "5": [[180, 270]],
+  "6": [[180, 270, 0]],
+  "7": [[0, 90]],
+  "8": [[0, 90, 180]],
+  "9": [[0, 90, 180]]
+};
+
+/* Example time: 12:34 */
+const timeDigits = ["1", "2", "3", "4"];
+
+/* ---- Draw pixels ---- */
+let svgContent = "";
+
+// Bounding outline
+svgContent += `
+  <rect
+    x="${margin - 10}"
+    y="${margin - 10}"
+    width="${width - (margin - 10) * 2}"
+    height="${height - (margin - 10) * 2}"
+    class="outline"
+  />
+`;
+
+for (let r = 0; r < rows; r++) {
+  for (let c = 0; c < cols; c++) {
+
+    const cx = margin + visibleRadius + c * spacing;
+    const cy = margin + visibleRadius + r * spacing;
+
+    // visible area
+    svgContent += circle(cx, cy, visibleRadius, "pixel");
+
+    // safe radius (118 px equivalent)
+    svgContent += circle(cx, cy, visibleRadius * (118 / 120), "safe");
+
+    // Determine which digit this pixel belongs to
+    const digitIndex = Math.floor(c / 2);
+    if (digitIndex < timeDigits.length) {
+      const digit = timeDigits[digitIndex];
+      const hands = DIGITS[digit];
+
+      // top/middle/bottom row selects hand combo
+      const rowHands = hands[r] || [];
+
+      rowHands.forEach(angle => {
+        svgContent += hand(cx, cy, angle, visibleRadius * 0.75);
+      });
+    }
+  }
+}
+
+svg.innerHTML = svgContent;
+</script>
+
+</body>
+</html>

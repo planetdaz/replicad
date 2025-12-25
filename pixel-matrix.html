@@ -48,24 +48,23 @@
 /* ---- Physical parameters (mm) ---- */
 const cols = 8;
 const rows = 3;
-const cylinderOD = 44.0;
-const bezel = 4.7;
-const cylinderGap = 2.75;
+const cylinderOD = 44.0; // outer diameter
+const visibleDiameter = 34.6; // inner visible diameter
+const cylinderGap = 2.75; // gap between outside circles
 
 /* ---- Derived geometry ---- */
-const visibleDiameter = cylinderOD - 2 * bezel;
-const visibleRadius = visibleDiameter / 2;
-const visibleGap = bezel * 2 + cylinderGap;
-const spacing = visibleDiameter + visibleGap;
+const outerRadius = cylinderOD / 2;
+const innerRadius = visibleDiameter / 2;
+const spacing = 46.75; // center-to-center distance in mm
 
 /* ---- SVG sizing ---- */
-const margin = 20;
-const width = spacing * (cols - 1) + visibleDiameter + margin * 2;
-const height = spacing * (rows - 1) + visibleDiameter + margin * 2;
+const margin = cylinderGap; // gap between outline and edge circles
+const width = spacing * (cols - 1) + cylinderOD + margin * 2;
+const height = spacing * (rows - 1) + cylinderOD + margin * 2;
 
 const svg = document.getElementById("svg");
-svg.removeAttribute("width");
-svg.setAttribute("height", height);
+svg.style.width = "100vw";
+svg.style.height = "auto";
 svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
 /* ---- Helpers ---- */
@@ -136,17 +135,17 @@ function drawMatrix() {
   }
 
   // Recompute width and update SVG size
-  const dynamicWidth = spacing * (totalCols - 1) + visibleDiameter + margin * 2;
+  const dynamicWidth = spacing * (totalCols - 1) + cylinderOD + margin * 2;
   svg.setAttribute("viewBox", `0 0 ${dynamicWidth} ${height}`);
 
   let svgContent = "";
   // Bounding outline
   svgContent += `
     <rect
-      x="${margin - 10}"
-      y="${margin - 10}"
-      width="${dynamicWidth - (margin - 10) * 2}"
-      height="${height - (margin - 10) * 2}"
+      x="${margin}"
+      y="${margin}"
+      width="${dynamicWidth - margin * 2}"
+      height="${height - margin * 2}"
       class="outline"
     />
   `;
@@ -155,10 +154,10 @@ function drawMatrix() {
   let colCursor = 0;
   for (; colCursor < leftPad; colCursor++) {
     for (let r = 0; r < rows; r++) {
-      const cx = margin + visibleRadius + colCursor * spacing;
-      const cy = margin + visibleRadius + r * spacing;
-      svgContent += circle(cx, cy, visibleRadius, "pixel");
-      svgContent += circle(cx, cy, visibleRadius * (118 / 120), "safe");
+      const cx = margin + outerRadius + colCursor * spacing;
+      const cy = margin + outerRadius + r * spacing;
+      svgContent += circle(cx, cy, outerRadius, "pixel");
+      svgContent += circle(cx, cy, innerRadius, "safe");
     }
   }
   // Render each digit, advancing by 2 columns for most, 1 for '1' or ':'
@@ -168,16 +167,16 @@ function drawMatrix() {
     const digitCols = (digit === '1' || digit === ':') ? 1 : 2;
     for (let dc = 0; dc < digitCols; dc++) {
       for (let r = 0; r < rows; r++) {
-        const cx = margin + visibleRadius + (colCursor + dc) * spacing;
-        const cy = margin + visibleRadius + r * spacing;
-        // visible area
-        svgContent += circle(cx, cy, visibleRadius, "pixel");
-        // safe radius (118 px equivalent)
-        svgContent += circle(cx, cy, visibleRadius * (118 / 120), "safe");
-        // Draw hands if present
+        const cx = margin + outerRadius + (colCursor + dc) * spacing;
+        const cy = margin + outerRadius + r * spacing;
+        // outer circle
+        svgContent += circle(cx, cy, outerRadius, "pixel");
+        // inner visible area
+        svgContent += circle(cx, cy, innerRadius, "safe");
+        // Draw hands if present, clipped to inner circle
         if (grid && grid[r] && grid[r][dc]) {
           grid[r][dc].forEach(angle => {
-            svgContent += hand(cx, cy, angle, visibleRadius * 0.92);
+            svgContent += hand(cx, cy, angle, innerRadius * 0.92);
           });
         }
       }
@@ -187,10 +186,10 @@ function drawMatrix() {
   // Pad with empty columns if needed (right side)
   for (; colCursor < totalCols; colCursor++) {
     for (let r = 0; r < rows; r++) {
-      const cx = margin + visibleRadius + colCursor * spacing;
-      const cy = margin + visibleRadius + r * spacing;
-      svgContent += circle(cx, cy, visibleRadius, "pixel");
-      svgContent += circle(cx, cy, visibleRadius * (118 / 120), "safe");
+      const cx = margin + outerRadius + colCursor * spacing;
+      const cy = margin + outerRadius + r * spacing;
+      svgContent += circle(cx, cy, outerRadius, "pixel");
+      svgContent += circle(cx, cy, innerRadius, "safe");
     }
   }
   svg.innerHTML = svgContent;

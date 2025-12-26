@@ -2,14 +2,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-      <select id="rippleSpeedSelect" style="margin-left:16px; display:none;">
-        <option value="0.2">Very Fast</option>
-        <option value="0.4">Fast</option>
-        <option value="0.6">Normal</option>
-        <option value="0.8">Slow</option>
-        <option value="1.0">Very Slow</option>
-      </select>
-      <span id="rippleSpeedLabel" style="display:none;">Ripple speed</span>
     <select id="rippleSelect" style="margin-left:16px; display:none;">
       <option value="none">No Ripple</option>
       <option value="left-right">Left to Right</option>
@@ -18,8 +10,17 @@
       <option value="bottom-top">Bottom to Top</option>
       <option value="center-out">Center Out</option>
       <option value="edges-in">Edges In</option>
+      <option value="random">Random</option>
     </select>
     <span id="rippleLabel" style="display:none;">Ripple direction</span>
+      <select id="rippleSpeedSelect" style="margin-left:16px; display:none;">
+        <option value="0.2">Very Fast</option>
+        <option value="0.4">Fast</option>
+        <option value="0.6">Normal</option>
+        <option value="0.8">Slow</option>
+        <option value="1.0">Very Slow</option>
+      </select>
+      <span id="rippleSpeedLabel" style="display:none;">Ripple spread</span>
   <meta charset="UTF-8" />
   <title>Virtual Pixel Matrix – Scale Layout</title>
   <style>
@@ -105,6 +106,8 @@
 <label style="display:block;margin:10px 0;">
   <input type="checkbox" id="timerCheckbox" checked> Enable 5 second timer
 </label>
+<div id="randomNotification" style="display:none; background:#ffe; padding:8px 12px; margin:10px 0; border-radius:4px; border:1px solid #cc9; font-size:14px; max-width:600px;">
+</div>
 <svg id="svg"></svg>
 
 <script>
@@ -222,6 +225,7 @@ const DIGITS = {
 // Globals for random mode
 let randomEasing = 'elastic';
 let randomTiming = 1.0;
+let randomRippleMode = 'none';
 
 let timeDigits = ["1", "2", ":", "3", "0"];
 let prevGrid = null;
@@ -319,6 +323,19 @@ function drawMatrix() {
     totalDuration = parseInt(durationSelect.value, 10);
   }
   const start = performance.now();
+
+  // Update ripple speed dropdown options with actual durations
+  const rippleSpeedSelect = document.getElementById('rippleSpeedSelect');
+  const currentRippleSpeed = rippleSpeedSelect.value;
+  rippleSpeedSelect.innerHTML = `
+    <option value="0.2">Very Fast (${(totalDuration * 0.2 / 1000).toFixed(1)}s)</option>
+    <option value="0.4">Fast (${(totalDuration * 0.4 / 1000).toFixed(1)}s)</option>
+    <option value="0.6">Normal (${(totalDuration * 0.6 / 1000).toFixed(1)}s)</option>
+    <option value="0.8">Slow (${(totalDuration * 0.8 / 1000).toFixed(1)}s)</option>
+    <option value="1.0">Very Slow (${(totalDuration * 1.0 / 1000).toFixed(1)}s)</option>
+  `;
+  rippleSpeedSelect.value = currentRippleSpeed;
+
   // Ripple logic
   const rippleSelect = document.getElementById('rippleSelect');
   const savedRipple = localStorage.getItem('pixelMatrixRippleMode');
@@ -329,10 +346,16 @@ function drawMatrix() {
   } else if (rippleSelect && rippleSelect.value) {
     rippleMode = rippleSelect.value;
   }
+
+  // Handle random ripple mode
+  if (rippleMode === 'random') {
+    const rippleModes = ['left-right', 'right-left', 'top-bottom', 'bottom-top', 'center-out', 'edges-in'];
+    randomRippleMode = rippleModes[Math.floor(Math.random() * rippleModes.length)];
+    rippleMode = randomRippleMode;
+  }
   // Compute per-pixel ripple delay
   let delays = [];
   // Ripple speed
-  const rippleSpeedSelect = document.getElementById('rippleSpeedSelect');
   const savedRippleSpeed = localStorage.getItem('pixelMatrixRippleSpeed');
   let rippleSpeed = 0.6;
   if (savedRippleSpeed) {
@@ -390,8 +413,71 @@ function drawMatrix() {
   let handDelays = [];
   // Pick one random easing for the entire animation phase
   const easingModes = ['elastic', 'linear', 'ease-in-out', 'bounce', 'back-in', 'back-out', 'back-in-out'];
-  const randomEasing = easingModes[Math.floor(Math.random() * easingModes.length)];
-  const randomTiming = 0.7 + Math.random() * 0.6;
+  const easingSelect = document.getElementById('easingSelect');
+  const selectedEasingMode = easingSelect ? easingSelect.value : 'elastic';
+
+  if (selectedEasingMode === 'random') {
+    randomEasing = easingModes[Math.floor(Math.random() * easingModes.length)];
+    randomTiming = 0.7 + Math.random() * 0.6;
+  }
+
+  // Display notification for all animations
+  const notificationDiv = document.getElementById('randomNotification');
+  const rippleSelectValue = document.getElementById('rippleSelect').value;
+  let messages = [];
+
+  const durationMs = totalDuration;
+  const durationSec = (durationMs / 1000).toFixed(1);
+
+  // Ripple information first (to match UI order)
+  if (rippleSelectValue !== 'none') {
+    const rippleNames = {
+      'left-right': 'Left to Right',
+      'right-left': 'Right to Left',
+      'top-bottom': 'Top to Bottom',
+      'bottom-top': 'Bottom to Top',
+      'center-out': 'Center Out',
+      'edges-in': 'Edges In'
+    };
+    const displayRipple = rippleSelectValue === 'random' ? randomRippleMode : rippleSelectValue;
+    const rippleLabel = rippleSelectValue === 'random' ? `${rippleNames[displayRipple] || displayRipple} (random)` : (rippleNames[displayRipple] || displayRipple);
+
+    // Get ripple speed name and duration
+    const rippleSpeedNames = {
+      0.2: 'Very Fast',
+      0.4: 'Fast',
+      0.6: 'Normal',
+      0.8: 'Slow',
+      1.0: 'Very Slow'
+    };
+    const rippleSpeedName = rippleSpeedNames[rippleSpeed] || rippleSpeed.toFixed(1);
+    const rippleSpreadSec = (durationMs * rippleSpeed / 1000).toFixed(1);
+
+    messages.push(`<b>Ripple:</b> ${rippleLabel}, ${rippleSpeedName} (${rippleSpreadSec}s)`);
+  }
+
+  // Easing information (combined with duration and timing)
+  const easingNames = {
+    'elastic': 'Elastic',
+    'linear': 'Linear',
+    'ease-in-out': 'Ease-in-out',
+    'bounce': 'Bounce',
+    'back-in': 'Back (at start)',
+    'back-out': 'Back (at end)',
+    'back-in-out': 'Back (in & out)'
+  };
+  const displayEasing = selectedEasingMode === 'random' ? randomEasing : selectedEasingMode;
+  const easingLabel = selectedEasingMode === 'random' ? `${easingNames[randomEasing] || randomEasing} (random)` : (easingNames[displayEasing] || displayEasing);
+
+  // Combine easing type, duration, and timing multiplier
+  let easingInfo = `<b>Easing:</b> ${easingLabel}, ${durationSec}s`;
+  if (selectedEasingMode === 'random') {
+    easingInfo += ` (${randomTiming.toFixed(2)}x)`;
+  }
+  messages.push(easingInfo);
+
+  notificationDiv.innerHTML = messages.join(' &nbsp;|&nbsp; ');
+  notificationDiv.style.display = 'block';
 
   for (let i = 0; i < nextGrid.length; i++) {
     handDurations[i] = [

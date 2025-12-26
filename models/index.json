@@ -40,6 +40,12 @@
         "name": "Christmas Ornament",
         "description": "Flat ornament ball with hanging knob for sticker application",
         "file": "./christmas-ornament.js"
+    },
+    {
+        "id": "dupont-strap",
+        "name": "DuPont Strap",
+        "description": "Rectangular strap for holding singular DuPont connectors with configurable pin count",
+        "file": "./dupont-strap.js"
     }
 ]
 

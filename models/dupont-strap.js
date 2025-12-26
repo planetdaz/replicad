@@ -2,7 +2,7 @@
 // Rectangular strap for holding singular DuPont connectors
 
 export default async function build(replicad) {
-    const { drawRectangle } = replicad;
+    const { drawRectangle, drawCircle } = replicad;
 
     // Parameters
     const pinCount = 6;           // Number of pins
@@ -18,6 +18,7 @@ export default async function build(replicad) {
 
     // Plug parameters (fill specific pins with solid blocks)
     const isPlugged = [false, false, true, false, true, false];  // Array indicating which pins to fill
+    const pinHoleDiameter = 1;  // Diameter of hole for male header pins (mm)
 
     // Calculate dimensions
     const adjustedPinSize = pinSize + tolerance;
@@ -65,10 +66,19 @@ export default async function build(replicad) {
             const pinYOffset = (index - (pinCount - 1) / 2) * adjustedPinSize;
 
             // Create a solid block the size of the pin
-            const plug = drawRectangle(pinSize, pinSize)
+            let plug = drawRectangle(pinSize, pinSize)
                 .sketchOnPlane()
                 .extrude(height)
                 .translate([0, pinYOffset, 0]);
+
+            // Create a hole through the plug for male header pins
+            const pinHole = drawCircle(pinHoleDiameter / 2)
+                .sketchOnPlane()
+                .extrude(height)
+                .translate([0, pinYOffset, 0]);
+
+            // Cut the hole from the plug
+            plug = plug.cut(pinHole);
 
             // Fuse the plug with the main strap
             result = result.fuse(plug);

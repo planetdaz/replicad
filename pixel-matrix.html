@@ -50,6 +50,13 @@
 </head>
 <body>
 
+
+<label style="display:block;margin:10px 0;">
+  <input type="checkbox" id="modeCheckbox"> Sequential mode (count up by 1 minute)
+</label>
+<label style="display:block;margin:10px 0;">
+  <input type="checkbox" id="timerCheckbox" checked> Enable 5 second timer
+</label>
 <svg id="svg"></svg>
 
 <script>
@@ -164,14 +171,34 @@ const DIGITS = {
 };
 
 // --- Animation and drawing logic ---
+
 let timeDigits = ["1", "2", ":", "3", "0"];
 let prevGrid = null;
 let animationFrameId = null;
+let sequentialMode = false;
+let currentHour = 12;
+let currentMinute = 0;
+
 
 function randomTimeDigits() {
   // Generate random hour (1-12) and minute (00-59) for 12-hour clock
   const hour = Math.floor(Math.random() * 12) + 1;
   const minute = Math.floor(Math.random() * 60);
+  return formatTimeDigits(hour, minute);
+}
+
+function sequentialTimeDigits() {
+  // Increment time by 1 minute
+  currentMinute++;
+  if (currentMinute >= 60) {
+    currentMinute = 0;
+    currentHour++;
+    if (currentHour > 12) currentHour = 1;
+  }
+  return formatTimeDigits(currentHour, currentMinute);
+}
+
+function formatTimeDigits(hour, minute) {
   // Remove leading zero for single-digit hour
   const hourStr = String(hour);
   const minStr = String(minute).padStart(2, '0');
@@ -343,18 +370,65 @@ drawMatrix();
 
 
 // Animate every 5 seconds, and allow space bar to advance
-let timer = setInterval(nextTime, 5000);
+
+
+let timer = null;
+const timerCheckbox = document.getElementById('timerCheckbox');
+
+function startTimer() {
+  if (!timer) timer = setInterval(nextTime, 5000);
+}
+function stopTimer() {
+  if (timer) { clearInterval(timer); timer = null; }
+}
+if (timerCheckbox.checked) startTimer();
+
 
 function nextTime() {
-  timeDigits = randomTimeDigits();
+  if (sequentialMode) {
+    timeDigits = sequentialTimeDigits();
+  } else {
+    timeDigits = randomTimeDigits();
+    // Reset sequential time to a random time when switching back
+    currentHour = Math.floor(Math.random() * 12) + 1;
+    currentMinute = Math.floor(Math.random() * 60);
+  }
   drawMatrix();
 }
 
+
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
-    clearInterval(timer);
+    stopTimer();
     nextTime();
-    timer = setInterval(nextTime, 5000);
+    if (timerCheckbox.checked) startTimer();
+  }
+});
+
+
+// Checkbox for mode switching
+const modeCheckbox = document.getElementById('modeCheckbox');
+modeCheckbox.addEventListener('change', function() {
+  sequentialMode = modeCheckbox.checked;
+  stopTimer();
+  // Reset time for sequential mode
+  if (sequentialMode) {
+    currentHour = 12;
+    currentMinute = 0;
+    timeDigits = formatTimeDigits(currentHour, currentMinute);
+  } else {
+    timeDigits = randomTimeDigits();
+  }
+  drawMatrix();
+  if (timerCheckbox.checked) startTimer();
+});
+
+// Checkbox for timer enable/disable
+timerCheckbox.addEventListener('change', function() {
+  if (timerCheckbox.checked) {
+    startTimer();
+  } else {
+    stopTimer();
   }
 });
 

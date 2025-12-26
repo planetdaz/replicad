@@ -6,8 +6,9 @@ export default async function build(replicad) {
 
     // Parameters
     const pinCount = 7;           // Number of pins
-    const pinSize = 2.6;          // Size of each pin (mm)
-    const tolerance = 0.05;        // Additional tolerance per pin (mm)
+    const pinSize = 2.6;          // Size of each pin housing (mm) - this determines spacing
+    const toleranceLength = 0.2;  // Additional tolerance for cavity length (mm) - total, not per pin
+    const toleranceWidth = 0.2;   // Additional tolerance for cavity width (mm)
     const thickness = 0.8;        // Wall thickness (mm)
     const height = 9;             // Height of the strap (mm)
 
@@ -21,16 +22,16 @@ export default async function build(replicad) {
     const pinHoleDiameter = 1.5;  // Diameter of hole for male header pins (mm)
 
     // Calculate dimensions
-    const adjustedPinSize = pinSize + tolerance;
+    // Pin spacing is exact - no tolerance accumulation
+    const pinSpacing = pinSize;  // Spacing between pin centers
 
-    // Calculate outside dimensions 
+    // Inside cavity dimensions (for hollowing) - add tolerance to overall size
+    const cavityLength = (pinCount * pinSpacing) + toleranceLength;  // Y axis
+    const cavityWidth = pinSpacing + toleranceWidth;                 // X axis
+
     // Outside dimensions
-    const length = (pinCount * adjustedPinSize) + (thickness * 2);  // Y axis
-    const width = adjustedPinSize + (thickness * 2);                 // X axis
-
-    // Inside cavity dimensions (for hollowing)
-    const cavityLength = pinCount * adjustedPinSize;  // Y axis
-    const cavityWidth = adjustedPinSize;              // X axis
+    const length = cavityLength + (thickness * 2);  // Y axis
+    const width = cavityWidth + (thickness * 2);    // X axis
 
     // Create outer rectangle
     const outerBox = drawRectangle(width, length)
@@ -62,8 +63,8 @@ export default async function build(replicad) {
     isPlugged.forEach((plugged, index) => {
         if (plugged && index < pinCount) {
             // Calculate position for this pin
-            // Pins are centered and arranged along Y axis
-            const pinYOffset = (index - (pinCount - 1) / 2) * adjustedPinSize;
+            // Pins are centered and arranged along Y axis with exact spacing
+            const pinYOffset = (index - (pinCount - 1) / 2) * pinSpacing;
 
             // Create a solid block the size of the pin
             let plug = drawRectangle(pinSize, pinSize)

@@ -72,13 +72,12 @@
   <select id="easingSelect" style="margin-right:8px;">
     <option value="elastic">Elastic</option>
     <option value="linear">Linear</option>
-    <option value="ease-in">Ease-in</option>
-    <option value="ease-out">Ease-out</option>
-    <option value="ease-in-out">Ease-in + Ease-out</option>
+    <option value="ease-in-out">Ease-in-out</option>
     <option value="bounce">Bounce</option>
     <option value="back-in">Back (at start)</option>
     <option value="back-out">Back (at end)</option>
     <option value="back-in-out">Back (in & out)</option>
+    <option value="random">Random</option>
   </select>
   Animation easing
   <select id="durationSelect" style="margin-left:16px;">
@@ -220,6 +219,9 @@ const DIGITS = {
 };
 
 // --- Animation and drawing logic ---
+// Globals for random mode
+let randomEasing = 'elastic';
+let randomTiming = 1.0;
 
 let timeDigits = ["1", "2", ":", "3", "0"];
 let prevGrid = null;
@@ -386,6 +388,11 @@ function drawMatrix() {
   // For each hand, randomize a duration (0.7-1.0x totalDuration), but apply ripple delay to the start time, not the duration
   let handDurations = [];
   let handDelays = [];
+  // Pick one random easing for the entire animation phase
+  const easingModes = ['elastic', 'linear', 'ease-in-out', 'bounce', 'back-in', 'back-out', 'back-in-out'];
+  const randomEasing = easingModes[Math.floor(Math.random() * easingModes.length)];
+  const randomTiming = 0.7 + Math.random() * 0.6;
+
   for (let i = 0; i < nextGrid.length; i++) {
     handDurations[i] = [
       totalDuration * (0.7 + Math.random() * 0.3),
@@ -524,9 +531,15 @@ function drawMatrix() {
     // We'll use the max duration for the overall animation, but each hand will finish at its own time
     // Find the maximum (delay + duration) for any hand, so animation doesn't end early
     let maxHandEnd = 0;
+    const mode = (window.easingSelect && window.easingSelect.value) || 'elastic';
     for (let i = 0; i < handDurations.length; i++) {
       for (let j = 0; j < 3; j++) {
-        let end = (handDelays && handDelays[i] ? handDelays[i][j] : 0) + handDurations[i][j];
+        let duration = handDurations[i][j];
+        // Account for randomTiming multiplier in random mode
+        if (mode === 'random') {
+          duration *= randomTiming;
+        }
+        let end = (handDelays && handDelays[i] ? handDelays[i][j] : 0) + duration;
         if (end > maxHandEnd) maxHandEnd = end;
       }
     }
@@ -574,16 +587,27 @@ function drawMatrix() {
         let handT = Math.max(0, Math.min(elapsed / duration, 1));
         let styleT;
         let mode = (window.easingSelect && window.easingSelect.value) || 'elastic';
-        if (mode === 'elastic') styleT = elasticEaseOut(handT);
-        else if (mode === 'linear') styleT = linearEase(handT);
-        else if (mode === 'ease-in') styleT = easeIn(handT);
-        else if (mode === 'ease-out') styleT = easeOut(handT);
-        else if (mode === 'ease-in-out') styleT = easeInOut(handT);
-        else if (mode === 'bounce') styleT = bounceEaseOut(handT);
-        else if (mode === 'back-in') styleT = backEaseIn(handT);
-        else if (mode === 'back-out') styleT = backEaseOut(handT);
-        else if (mode === 'back-in-out') styleT = backEaseInOut(handT);
-        else styleT = handT;
+        if (mode === 'random') {
+          // Use the same random easing for all hands in this animation phase
+          handT = Math.max(0, Math.min(elapsed / (duration * randomTiming), 1));
+          if (randomEasing === 'elastic') styleT = elasticEaseOut(handT);
+          else if (randomEasing === 'linear') styleT = linearEase(handT);
+          else if (randomEasing === 'ease-in-out') styleT = easeInOut(handT);
+          else if (randomEasing === 'bounce') styleT = bounceEaseOut(handT);
+          else if (randomEasing === 'back-in') styleT = backEaseIn(handT);
+          else if (randomEasing === 'back-out') styleT = backEaseOut(handT);
+          else if (randomEasing === 'back-in-out') styleT = backEaseInOut(handT);
+          else styleT = handT;
+        } else {
+          if (mode === 'elastic') styleT = elasticEaseOut(handT);
+          else if (mode === 'linear') styleT = linearEase(handT);
+          else if (mode === 'ease-in-out') styleT = easeInOut(handT);
+          else if (mode === 'bounce') styleT = bounceEaseOut(handT);
+          else if (mode === 'back-in') styleT = backEaseIn(handT);
+          else if (mode === 'back-out') styleT = backEaseOut(handT);
+          else if (mode === 'back-in-out') styleT = backEaseInOut(handT);
+          else styleT = handT;
+        }
         let direction = angleDirections[i][idx];
         let angle;
         if (sweep360Arr[i]) {
@@ -629,6 +653,11 @@ function drawMatrix() {
     } else {
       animationFrameId = null;
       prevGrid = nextGrid;
+      // Start timer only after animation completes
+      if (timerCheckbox && timerCheckbox.checked) {
+        // Prevent multiple timers
+        if (!timer) startTimer();
+      }
     }
   }
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -664,14 +693,17 @@ if (savedTimer !== null) {
 }
 
 function startTimer() {
-  if (!timer) timer = setInterval(nextTime, 5000);
+  if (!timer) timer = setInterval(() => {
+    // Only advance if no animation is running
+    if (!animationFrameId) nextTime();
+  }, 5000);
 }
 function stopTimer() {
   if (timer) { clearInterval(timer); timer = null; }
 }
 
 // Only start timer if checked and localStorage is true or not set
-if (timerCheckbox.checked && (savedTimer === null || savedTimer === 'true')) startTimer();
+if (timerCheckbox.checked && (savedTimer === null || savedTimer === 'true') && !animationFrameId) startTimer();
 
 
 

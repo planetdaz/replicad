@@ -2,6 +2,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+      <select id="rippleSpeedSelect" style="margin-left:16px; display:none;">
+        <option value="0.2">Very Fast</option>
+        <option value="0.4">Fast</option>
+        <option value="0.6">Normal</option>
+        <option value="0.8">Slow</option>
+        <option value="1.0">Very Slow</option>
+      </select>
+      <span id="rippleSpeedLabel" style="display:none;">Ripple speed</span>
+    <select id="rippleSelect" style="margin-left:16px; display:none;">
+      <option value="none">No Ripple</option>
+      <option value="left-right">Left to Right</option>
+      <option value="right-left">Right to Left</option>
+      <option value="top-bottom">Top to Bottom</option>
+      <option value="bottom-top">Bottom to Top</option>
+      <option value="center-out">Center Out</option>
+      <option value="edges-in">Edges In</option>
+    </select>
+    <span id="rippleLabel" style="display:none;">Ripple direction</span>
   <meta charset="UTF-8" />
   <title>Virtual Pixel Matrix – Scale Layout</title>
   <style>
@@ -299,14 +317,82 @@ function drawMatrix() {
     totalDuration = parseInt(durationSelect.value, 10);
   }
   const start = performance.now();
-  // For each hand, randomize a duration offset (0-600ms), but scale so all finish by totalDuration
+  // Ripple logic
+  const rippleSelect = document.getElementById('rippleSelect');
+  const savedRipple = localStorage.getItem('pixelMatrixRippleMode');
+  let rippleMode = 'none';
+  if (savedRipple) {
+    rippleMode = savedRipple;
+    rippleSelect.value = savedRipple;
+  } else if (rippleSelect && rippleSelect.value) {
+    rippleMode = rippleSelect.value;
+  }
+  // Compute per-pixel ripple delay
+  let delays = [];
+  // Ripple speed
+  const rippleSpeedSelect = document.getElementById('rippleSpeedSelect');
+  const savedRippleSpeed = localStorage.getItem('pixelMatrixRippleSpeed');
+  let rippleSpeed = 0.6;
+  if (savedRippleSpeed) {
+    rippleSpeed = parseFloat(savedRippleSpeed);
+    rippleSpeedSelect.value = savedRippleSpeed;
+  } else if (rippleSpeedSelect && rippleSpeedSelect.value) {
+    rippleSpeed = parseFloat(rippleSpeedSelect.value);
+  }
+  if (rippleMode !== 'none') {
+    // Get grid positions for each pixel
+    let positions = nextGrid.map(([col, row]) => ({col, row}));
+    let maxDelay = totalDuration * rippleSpeed; // user controls spread
+    let getDelay = (i) => 0;
+    if (rippleMode === 'left-right') {
+      let maxCol = Math.max(...positions.map(p => p.col));
+      getDelay = (i) => (positions[i].col / maxCol) * maxDelay;
+    } else if (rippleMode === 'right-left') {
+      let maxCol = Math.max(...positions.map(p => p.col));
+      getDelay = (i) => ((maxCol - positions[i].col) / maxCol) * maxDelay;
+    } else if (rippleMode === 'top-bottom') {
+      let maxRow = Math.max(...positions.map(p => p.row));
+      getDelay = (i) => (positions[i].row / maxRow) * maxDelay;
+    } else if (rippleMode === 'bottom-top') {
+      let maxRow = Math.max(...positions.map(p => p.row));
+      getDelay = (i) => ((maxRow - positions[i].row) / maxRow) * maxDelay;
+    } else if (rippleMode === 'center-out') {
+      let maxCol = Math.max(...positions.map(p => p.col));
+      let maxRow = Math.max(...positions.map(p => p.row));
+      let centerCol = maxCol / 2, centerRow = maxRow / 2;
+      let maxDist = Math.sqrt(centerCol*centerCol + centerRow*centerRow);
+      getDelay = (i) => {
+        let dx = positions[i].col - centerCol;
+        let dy = positions[i].row - centerRow;
+        return (Math.sqrt(dx*dx + dy*dy) / maxDist) * maxDelay;
+      };
+    } else if (rippleMode === 'edges-in') {
+      let maxCol = Math.max(...positions.map(p => p.col));
+      let maxRow = Math.max(...positions.map(p => p.row));
+      let centerCol = maxCol / 2, centerRow = maxRow / 2;
+      let maxDist = Math.sqrt(centerCol*centerCol + centerRow*centerRow);
+      getDelay = (i) => {
+        let dx = positions[i].col - centerCol;
+        let dy = positions[i].row - centerRow;
+        return (1 - Math.sqrt(dx*dx + dy*dy) / maxDist) * maxDelay;
+      };
+    }
+    for (let i = 0; i < nextGrid.length; i++) {
+      delays[i] = getDelay(i);
+    }
+  } else {
+    for (let i = 0; i < nextGrid.length; i++) delays[i] = 0;
+  }
+  // For each hand, randomize a duration (0.7-1.0x totalDuration), but apply ripple delay to the start time, not the duration
   let handDurations = [];
+  let handDelays = [];
   for (let i = 0; i < nextGrid.length; i++) {
     handDurations[i] = [
       totalDuration * (0.7 + Math.random() * 0.3),
       totalDuration * (0.7 + Math.random() * 0.3),
       totalDuration * (0.7 + Math.random() * 0.3)
     ];
+    handDelays[i] = [delays[i], delays[i], delays[i]];
   }
   // Store random direction for each hand transition
   let angleDirections = [];
@@ -392,6 +478,35 @@ function drawMatrix() {
   const color2 = [204,204,204]; // #ccc
   // Render function
   function renderFrame(now) {
+            // Show/hide ripple speed dropdown based on ripple mode
+            const rippleSpeedSelect = document.getElementById('rippleSpeedSelect');
+            const rippleSpeedLabel = document.getElementById('rippleSpeedLabel');
+            if (window.rippleSelect && window.rippleSelect.value !== 'none') {
+              rippleSpeedSelect.style.display = 'inline-block';
+              rippleSpeedLabel.style.display = 'inline-block';
+            } else {
+              rippleSpeedSelect.style.display = 'none';
+              rippleSpeedLabel.style.display = 'none';
+            }
+            // Save ripple speed
+            rippleSpeedSelect.addEventListener('change', () => {
+              localStorage.setItem('pixelMatrixRippleSpeed', rippleSpeedSelect.value);
+              if (animationFrameId) {
+                if (typeof drawMatrix === 'function') drawMatrix();
+              }
+            });
+        // Show/hide ripple dropdown based on mode
+        const rippleSelect = document.getElementById('rippleSelect');
+        const rippleLabel = document.getElementById('rippleLabel');
+        rippleSelect.style.display = 'inline-block';
+        rippleLabel.style.display = 'inline-block';
+        // Save ripple mode
+        rippleSelect.addEventListener('change', () => {
+          localStorage.setItem('pixelMatrixRippleMode', rippleSelect.value);
+          if (animationFrameId) {
+            if (typeof drawMatrix === 'function') drawMatrix();
+          }
+        });
     // Duration select logic
     const durationSelect = document.getElementById('durationSelect');
     const savedDuration = localStorage.getItem('pixelMatrixDuration');
@@ -407,14 +522,15 @@ function drawMatrix() {
     });
 
     // We'll use the max duration for the overall animation, but each hand will finish at its own time
-    // Find the maximum hand duration (should be close to totalDuration)
-    let maxHandDuration = 0;
+    // Find the maximum (delay + duration) for any hand, so animation doesn't end early
+    let maxHandEnd = 0;
     for (let i = 0; i < handDurations.length; i++) {
       for (let j = 0; j < 3; j++) {
-        if (handDurations[i][j] > maxHandDuration) maxHandDuration = handDurations[i][j];
+        let end = (handDelays && handDelays[i] ? handDelays[i][j] : 0) + handDurations[i][j];
+        if (end > maxHandEnd) maxHandEnd = end;
       }
     }
-    let t = Math.min((now - start) / maxHandDuration, 1);
+    let t = Math.min((now - start) / maxHandEnd, 1);
     // Easing mode select logic
     const easingSelect = document.getElementById('easingSelect');
     const savedEasingMode = localStorage.getItem('pixelMatrixEasingMode');
@@ -451,8 +567,11 @@ function drawMatrix() {
         const nextAngle = nextCell[idx];
         const prevStyle = prevCell[3] || 1;
         const nextStyle = nextCell[3] || 1;
-        // Per-hand progress and easing
-        let handT = Math.min((now - start) / handDurations[i][idx], 1);
+        // Per-hand progress and easing, with ripple delay
+        let delay = handDelays[i][idx] || 0;
+        let duration = handDurations[i][idx];
+        let elapsed = now - start - delay;
+        let handT = Math.max(0, Math.min(elapsed / duration, 1));
         let styleT;
         let mode = (window.easingSelect && window.easingSelect.value) || 'elastic';
         if (mode === 'elastic') styleT = elasticEaseOut(handT);
@@ -505,8 +624,9 @@ function drawMatrix() {
       }
     }
     svg.innerHTML = svgContent;
-    if (t < 1) animationFrameId = requestAnimationFrame(renderFrame);
-    else {
+    if (t < 1) {
+      animationFrameId = requestAnimationFrame(renderFrame);
+    } else {
       animationFrameId = null;
       prevGrid = nextGrid;
     }

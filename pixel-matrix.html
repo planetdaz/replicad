@@ -56,8 +56,19 @@
     <option value="linear">Linear</option>
     <option value="ease-in">Ease-in</option>
     <option value="ease-out">Ease-out</option>
+    <option value="ease-in-out">Ease-in + Ease-out</option>
   </select>
   Animation easing
+  <select id="durationSelect" style="margin-left:16px;">
+    <option value="600">0.6 seconds (Fastest)</option>
+    <option value="1000">1 second (Faster)</option>
+    <option value="1600">1.6 seconds (Fast)</option>
+    <option value="2400">2.4 seconds (Normal)</option>
+    <option value="3500">3.5 seconds (Slow)</option>
+    <option value="5000">5 seconds (Slower)</option>
+    <option value="8000">8 seconds (Slowest)</option>
+  </select>
+  Animation duration
 </label>
 </label>
 <div style="background:#eef;padding:10px 16px;margin-bottom:10px;border-radius:8px;max-width:600px;">
@@ -274,15 +285,23 @@ function drawMatrix() {
     }
   }
   // Animate hands from prevGrid to nextGrid
-  const baseDuration = 3500; // slightly longer base duration
+  // Get user-selected duration
+  const durationSelect = document.getElementById('durationSelect');
+  const savedDuration = localStorage.getItem('pixelMatrixDuration');
+  let totalDuration = 1600;
+  if (savedDuration) {
+    totalDuration = parseInt(savedDuration, 10);
+  } else if (durationSelect && durationSelect.value) {
+    totalDuration = parseInt(durationSelect.value, 10);
+  }
   const start = performance.now();
-  // For each hand, randomize a duration offset (0-600ms)
+  // For each hand, randomize a duration offset (0-600ms), but scale so all finish by totalDuration
   let handDurations = [];
   for (let i = 0; i < nextGrid.length; i++) {
     handDurations[i] = [
-      baseDuration + Math.random() * 600,
-      baseDuration + Math.random() * 600,
-      baseDuration + Math.random() * 600
+      totalDuration * (0.7 + Math.random() * 0.3),
+      totalDuration * (0.7 + Math.random() * 0.3),
+      totalDuration * (0.7 + Math.random() * 0.3)
     ];
   }
   // Store random direction for each hand transition
@@ -326,17 +345,40 @@ function drawMatrix() {
   function easeOut(t) {
     return t * (2 - t);
   }
+  function easeInOut(t) {
+    // Smoothstep (S-curve)
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
   // Color definitions
   const color1 = [17,17,17]; // #111
   const color2 = [204,204,204]; // #ccc
   // Render function
   function renderFrame(now) {
+    // Duration select logic
+    const durationSelect = document.getElementById('durationSelect');
+    const savedDuration = localStorage.getItem('pixelMatrixDuration');
+    if (savedDuration) {
+      durationSelect.value = savedDuration;
+    }
+    window.durationSelect = durationSelect;
+    durationSelect.addEventListener('change', () => {
+      localStorage.setItem('pixelMatrixDuration', durationSelect.value);
+      if (animationFrameId) {
+        if (typeof drawMatrix === 'function') drawMatrix();
+      }
+    });
+
     // We'll use the max duration for the overall animation, but each hand will finish at its own time
-    let maxHandDuration = baseDuration + 600;
+    // Find the maximum hand duration (should be close to totalDuration)
+    let maxHandDuration = 0;
+    for (let i = 0; i < handDurations.length; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (handDurations[i][j] > maxHandDuration) maxHandDuration = handDurations[i][j];
+      }
+    }
     let t = Math.min((now - start) / maxHandDuration, 1);
     // Easing mode select logic
     const easingSelect = document.getElementById('easingSelect');
-    // Restore easing select state from localStorage
     const savedEasingMode = localStorage.getItem('pixelMatrixEasingMode');
     if (savedEasingMode) {
       easingSelect.value = savedEasingMode;
@@ -344,7 +386,6 @@ function drawMatrix() {
     window.easingSelect = easingSelect;
     easingSelect.addEventListener('change', () => {
       localStorage.setItem('pixelMatrixEasingMode', easingSelect.value);
-      // Restart animation to apply new easing immediately
       if (animationFrameId) {
         if (typeof drawMatrix === 'function') drawMatrix();
       }
@@ -380,6 +421,7 @@ function drawMatrix() {
         else if (mode === 'linear') styleT = linearEase(handT);
         else if (mode === 'ease-in') styleT = easeIn(handT);
         else if (mode === 'ease-out') styleT = easeOut(handT);
+        else if (mode === 'ease-in-out') styleT = easeInOut(handT);
         else styleT = handT;
         let direction = angleDirections[i][idx];
         let angle;
@@ -430,6 +472,16 @@ function drawMatrix() {
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
   animationFrameId = requestAnimationFrame(renderFrame);
 }
+
+// Restore duration select state from localStorage
+const durationSelect = document.getElementById('durationSelect');
+const savedDuration = localStorage.getItem('pixelMatrixDuration');
+if (savedDuration) {
+  durationSelect.value = savedDuration;
+}
+durationSelect.addEventListener('change', () => {
+  localStorage.setItem('pixelMatrixDuration', durationSelect.value);
+});
 
 // Initial draw
 drawMatrix();

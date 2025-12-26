@@ -5,7 +5,7 @@ export default async function build(replicad) {
     const { drawRectangle } = replicad;
 
     // Parameters
-    const pinCount = 7;           // Number of pins
+    const pinCount = 6;           // Number of pins
     const pinSize = 2.6;          // Size of each pin (mm)
     const tolerance = 0.1;        // Additional tolerance per pin (mm)
     const thickness = 0.8;        // Wall thickness (mm)
@@ -15,6 +15,9 @@ export default async function build(replicad) {
     const hasNotch = true;        // Enable/disable orientation notch
     const notchWidth = 2;         // Width of the notch (mm) - along X axis
     const notchLength = 1;        // Length of the notch (mm) - extends outward on Y axis
+
+    // Plug parameters (fill specific pins with solid blocks)
+    const isPlugged = [false, false, true, false, true, false];  // Array indicating which pins to fill
 
     // Calculate dimensions
     const adjustedPinSize = pinSize + tolerance;
@@ -53,6 +56,24 @@ export default async function build(replicad) {
         // Fuse the notch with the main strap
         result = result.fuse(notch);
     }
+
+    // Add plug solids for specified pins
+    isPlugged.forEach((plugged, index) => {
+        if (plugged && index < pinCount) {
+            // Calculate position for this pin
+            // Pins are centered and arranged along Y axis
+            const pinYOffset = (index - (pinCount - 1) / 2) * adjustedPinSize;
+
+            // Create a solid block the size of the pin
+            const plug = drawRectangle(pinSize, pinSize)
+                .sketchOnPlane()
+                .extrude(height)
+                .translate([0, pinYOffset, 0]);
+
+            // Fuse the plug with the main strap
+            result = result.fuse(plug);
+        }
+    });
 
     return result;
 }

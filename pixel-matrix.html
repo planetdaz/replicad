@@ -49,11 +49,16 @@
   </style>
 </head>
 <body>
+<div style="background:#eef;padding:10px 16px;margin-bottom:10px;border-radius:8px;max-width:600px;">
+  <b>Instructions:</b><br>
+  <ul style="margin:8px 0 0 18px;padding:0;">
+    <li><b>Left/Right Arrow</b>: Step time backward/forward by 1 minute</li>
+    <li><b>Spacebar</b>: Randomize the time</li>
+    <li><b>Enable 5 second timer</b>: When checked, time advances automatically every 5 seconds</li>
+  </ul>
+</div>
 
 
-<label style="display:block;margin:10px 0;">
-  <input type="checkbox" id="modeCheckbox"> Sequential mode (count up by 1 minute)
-</label>
 <label style="display:block;margin:10px 0;">
   <input type="checkbox" id="timerCheckbox" checked> Enable 5 second timer
 </label>
@@ -175,7 +180,6 @@ const DIGITS = {
 let timeDigits = ["1", "2", ":", "3", "0"];
 let prevGrid = null;
 let animationFrameId = null;
-let sequentialMode = false;
 let currentHour = 12;
 let currentMinute = 0;
 
@@ -186,6 +190,7 @@ function randomTimeDigits() {
   const minute = Math.floor(Math.random() * 60);
   return formatTimeDigits(hour, minute);
 }
+
 
 
 function sequentialTimeDigits(delta = 1) {
@@ -372,8 +377,16 @@ drawMatrix();
 // Animate every 5 seconds, and allow space bar to advance
 
 
+
+
+
 let timer = null;
 const timerCheckbox = document.getElementById('timerCheckbox');
+// Restore timer checkbox state from localStorage
+const savedTimer = localStorage.getItem('pixelMatrixTimerEnabled');
+if (savedTimer !== null) {
+  timerCheckbox.checked = savedTimer === 'true';
+}
 
 function startTimer() {
   if (!timer) timer = setInterval(nextTime, 5000);
@@ -381,81 +394,50 @@ function startTimer() {
 function stopTimer() {
   if (timer) { clearInterval(timer); timer = null; }
 }
-if (timerCheckbox.checked) startTimer();
+
+// Only start timer if checked and localStorage is true or not set
+if (timerCheckbox.checked && (savedTimer === null || savedTimer === 'true')) startTimer();
+
 
 
 
 function nextTime(delta = 1) {
-  if (sequentialMode) {
-    timeDigits = sequentialTimeDigits(delta);
-  } else {
-    timeDigits = randomTimeDigits();
-    // Save the random time for possible sequential mode switch
-    const hour = currentHour = Math.floor(Math.random() * 12) + 1;
-    const minute = currentMinute = Math.floor(Math.random() * 60);
-    // Show the random time
-    timeDigits = formatTimeDigits(hour, minute);
-  }
+  timeDigits = sequentialTimeDigits(delta);
+  drawMatrix();
+}
+
+function randomizeTime() {
+  // Set to a new random time
+  const hour = currentHour = Math.floor(Math.random() * 12) + 1;
+  const minute = currentMinute = Math.floor(Math.random() * 60);
+  timeDigits = formatTimeDigits(hour, minute);
   drawMatrix();
 }
 
 
 
 document.addEventListener('keydown', (e) => {
-  if (sequentialMode) {
-    if (e.code === 'ArrowLeft') {
-      stopTimer();
-      nextTime(-1);
-      if (timerCheckbox.checked) startTimer();
-      e.preventDefault();
-      return;
-    } else if (e.code === 'ArrowRight') {
-      stopTimer();
-      nextTime(1);
-      if (timerCheckbox.checked) startTimer();
-      e.preventDefault();
-      return;
-    }
-  }
-  if (e.code === 'Space') {
+  if (e.code === 'ArrowLeft') {
     stopTimer();
-    nextTime();
+    nextTime(-1);
+    if (timerCheckbox.checked) startTimer();
+    e.preventDefault();
+    return;
+  } else if (e.code === 'ArrowRight') {
+    stopTimer();
+    nextTime(1);
+    if (timerCheckbox.checked) startTimer();
+    e.preventDefault();
+    return;
+  } else if (e.code === 'Space') {
+    stopTimer();
+    randomizeTime();
     if (timerCheckbox.checked) startTimer();
     e.preventDefault();
   }
 });
 
 
-
-// Checkbox for mode switching
-const modeCheckbox = document.getElementById('modeCheckbox');
-// Restore checkbox states from localStorage
-const savedSequential = localStorage.getItem('pixelMatrixSequentialMode');
-const savedTimer = localStorage.getItem('pixelMatrixTimerEnabled');
-if (savedSequential !== null) {
-  modeCheckbox.checked = savedSequential === 'true';
-  sequentialMode = modeCheckbox.checked;
-}
-if (savedTimer !== null) {
-  timerCheckbox.checked = savedTimer === 'true';
-}
-modeCheckbox.addEventListener('change', function(e) {
-  sequentialMode = modeCheckbox.checked;
-  localStorage.setItem('pixelMatrixSequentialMode', sequentialMode);
-  stopTimer();
-  // When switching to sequential, keep the current time
-  // When switching to random, show a new random time
-  if (!sequentialMode) {
-    timeDigits = randomTimeDigits();
-  } else {
-    // Use currentHour/currentMinute as is
-    timeDigits = formatTimeDigits(currentHour, currentMinute);
-  }
-  drawMatrix();
-  if (timerCheckbox.checked) startTimer();
-  // Remove focus to prevent spacebar toggling
-  e.target.blur();
-});
 
 // Checkbox for timer enable/disable
 timerCheckbox.addEventListener('change', function(e) {

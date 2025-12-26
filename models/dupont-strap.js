@@ -7,7 +7,7 @@ export default async function build(replicad) {
     // Parameters
     const pinCount = 7;           // Number of pins
     const pinSize = 2.6;          // Size of each pin (mm)
-    const tolerance = 0.1;        // Additional tolerance per pin (mm)
+    const tolerance = 0.05;        // Additional tolerance per pin (mm)
     const thickness = 0.8;        // Wall thickness (mm)
     const height = 9;             // Height of the strap (mm)
 
@@ -18,7 +18,7 @@ export default async function build(replicad) {
 
     // Plug parameters (fill specific pins with solid blocks)
     const isPlugged = [false, false, true, false, true, false, true];  // Array indicating which pins to fill
-    const pinHoleDiameter = 1;  // Diameter of hole for male header pins (mm)
+    const pinHoleDiameter = 1.5;  // Diameter of hole for male header pins (mm)
 
     // Calculate dimensions
     const adjustedPinSize = pinSize + tolerance;

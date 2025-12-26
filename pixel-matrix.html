@@ -235,6 +235,7 @@ function drawMatrix() {
   const start = performance.now();
   // Store random direction for each hand transition
   let angleDirections = [];
+  let sweep360Arr = [];
   if (!prevGrid) prevGrid = nextGrid.map(cell => [...cell]);
   for (let i = 0; i < nextGrid.length; i++) {
     angleDirections[i] = [
@@ -242,6 +243,10 @@ function drawMatrix() {
       Math.random() < 0.5 ? 1 : -1,
       Math.random() < 0.5 ? 1 : -1
     ];
+    // If the digit/cell is unchanged, set a flag for 360 sweep
+    const prevCell = prevGrid && prevGrid[i] ? prevGrid[i][2] : null;
+    const nextCell = nextGrid[i][2];
+    sweep360Arr[i] = (prevCell && nextCell && prevCell.join() === nextCell.join());
   }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function lerpAngle(a, b, t) {
@@ -282,18 +287,20 @@ function drawMatrix() {
         const nextAngle = nextCell[idx];
         const prevStyle = prevCell[3] || 1;
         const nextStyle = nextCell[3] || 1;
-        // Interpolate angle, length, and color
         const styleT = t;
-        // Angle tween with random direction (sign only, always ends at target)
-        let diff = ((nextAngle - prevAngle + 540) % 360) - 180;
         let direction = angleDirections[i][idx];
-        // If direction is wrong, go the other way around the circle
-        if (direction === 1) {
-          // normal shortest path
-          var angle = (prevAngle + diff * styleT + 360) % 360;
+        let angle;
+        if (sweep360Arr[i]) {
+          // Always sweep a full circle in the random direction
+          angle = (prevAngle + 360 * direction * styleT + 360) % 360;
         } else {
-          // go the long way around
-          var angle = (prevAngle - (360 - Math.abs(diff)) * styleT * Math.sign(diff) + 360) % 360;
+          // Normal shortest-path tween
+          let diff = ((nextAngle - prevAngle + 540) % 360) - 180;
+          if (direction === 1) {
+            angle = (prevAngle + diff * styleT + 360) % 360;
+          } else {
+            angle = (prevAngle - (360 - Math.abs(diff)) * styleT * Math.sign(diff) + 360) % 360;
+          }
         }
         // Style interpolation
         const style = styleT < 1 ? prevStyle : nextStyle;

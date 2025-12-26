@@ -7,8 +7,8 @@ export default async function build(replicad) {
     // Parameters
     const pinCount = 7;           // Number of pins
     const pinSize = 2.6;          // Size of each pin housing (mm) - this determines spacing
-    const toleranceLength = 0.2;  // Additional tolerance for cavity length (mm) - total, not per pin
-    const toleranceWidth = 0.2;   // Additional tolerance for cavity width (mm)
+    const toleranceLength = 0;  // Additional tolerance for cavity length (mm) - total, not per pin
+    const toleranceWidth = 0.1;   // Additional tolerance for cavity width (mm)
     const thickness = 0.8;        // Wall thickness (mm)
     const height = 9;             // Height of the strap (mm)
 

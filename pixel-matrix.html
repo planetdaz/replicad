@@ -187,14 +187,14 @@ function randomTimeDigits() {
   return formatTimeDigits(hour, minute);
 }
 
-function sequentialTimeDigits() {
-  // Increment time by 1 minute
-  currentMinute++;
-  if (currentMinute >= 60) {
-    currentMinute = 0;
-    currentHour++;
-    if (currentHour > 12) currentHour = 1;
-  }
+
+function sequentialTimeDigits(delta = 1) {
+  // Change time by delta minutes (default +1)
+  let totalMinutes = (currentHour - 1) * 60 + currentMinute + delta;
+  if (totalMinutes < 0) totalMinutes += 12 * 60;
+  totalMinutes = totalMinutes % (12 * 60);
+  currentHour = Math.floor(totalMinutes / 60) + 1;
+  currentMinute = totalMinutes % 60;
   return formatTimeDigits(currentHour, currentMinute);
 }
 
@@ -384,52 +384,89 @@ function stopTimer() {
 if (timerCheckbox.checked) startTimer();
 
 
-function nextTime() {
+
+function nextTime(delta = 1) {
   if (sequentialMode) {
-    timeDigits = sequentialTimeDigits();
+    timeDigits = sequentialTimeDigits(delta);
   } else {
     timeDigits = randomTimeDigits();
-    // Reset sequential time to a random time when switching back
-    currentHour = Math.floor(Math.random() * 12) + 1;
-    currentMinute = Math.floor(Math.random() * 60);
+    // Save the random time for possible sequential mode switch
+    const hour = currentHour = Math.floor(Math.random() * 12) + 1;
+    const minute = currentMinute = Math.floor(Math.random() * 60);
+    // Show the random time
+    timeDigits = formatTimeDigits(hour, minute);
   }
   drawMatrix();
 }
 
 
+
 document.addEventListener('keydown', (e) => {
+  if (sequentialMode) {
+    if (e.code === 'ArrowLeft') {
+      stopTimer();
+      nextTime(-1);
+      if (timerCheckbox.checked) startTimer();
+      e.preventDefault();
+      return;
+    } else if (e.code === 'ArrowRight') {
+      stopTimer();
+      nextTime(1);
+      if (timerCheckbox.checked) startTimer();
+      e.preventDefault();
+      return;
+    }
+  }
   if (e.code === 'Space') {
     stopTimer();
     nextTime();
     if (timerCheckbox.checked) startTimer();
+    e.preventDefault();
   }
 });
+
 
 
 // Checkbox for mode switching
 const modeCheckbox = document.getElementById('modeCheckbox');
-modeCheckbox.addEventListener('change', function() {
+// Restore checkbox states from localStorage
+const savedSequential = localStorage.getItem('pixelMatrixSequentialMode');
+const savedTimer = localStorage.getItem('pixelMatrixTimerEnabled');
+if (savedSequential !== null) {
+  modeCheckbox.checked = savedSequential === 'true';
   sequentialMode = modeCheckbox.checked;
+}
+if (savedTimer !== null) {
+  timerCheckbox.checked = savedTimer === 'true';
+}
+modeCheckbox.addEventListener('change', function(e) {
+  sequentialMode = modeCheckbox.checked;
+  localStorage.setItem('pixelMatrixSequentialMode', sequentialMode);
   stopTimer();
-  // Reset time for sequential mode
-  if (sequentialMode) {
-    currentHour = 12;
-    currentMinute = 0;
-    timeDigits = formatTimeDigits(currentHour, currentMinute);
-  } else {
+  // When switching to sequential, keep the current time
+  // When switching to random, show a new random time
+  if (!sequentialMode) {
     timeDigits = randomTimeDigits();
+  } else {
+    // Use currentHour/currentMinute as is
+    timeDigits = formatTimeDigits(currentHour, currentMinute);
   }
   drawMatrix();
   if (timerCheckbox.checked) startTimer();
+  // Remove focus to prevent spacebar toggling
+  e.target.blur();
 });
 
 // Checkbox for timer enable/disable
-timerCheckbox.addEventListener('change', function() {
+timerCheckbox.addEventListener('change', function(e) {
+  localStorage.setItem('pixelMatrixTimerEnabled', timerCheckbox.checked);
   if (timerCheckbox.checked) {
     startTimer();
   } else {
     stopTimer();
   }
+  // Remove focus to prevent spacebar toggling
+  e.target.blur();
 });
 
 

@@ -49,6 +49,9 @@
   </style>
 </head>
 <body>
+<label style="display:block;margin:10px 0;">
+  <input type="checkbox" id="easingCheckbox"> Elastic easing (uncheck for linear)
+</label>
 <div style="background:#eef;padding:10px 16px;margin-bottom:10px;border-radius:8px;max-width:600px;">
   <b>Instructions:</b><br>
   <ul style="margin:8px 0 0 18px;padding:0;">
@@ -263,8 +266,17 @@ function drawMatrix() {
     }
   }
   // Animate hands from prevGrid to nextGrid
-  const duration = 3000;
+  const baseDuration = 3500; // slightly longer base duration
   const start = performance.now();
+  // For each hand, randomize a duration offset (0-600ms)
+  let handDurations = [];
+  for (let i = 0; i < nextGrid.length; i++) {
+    handDurations[i] = [
+      baseDuration + Math.random() * 600,
+      baseDuration + Math.random() * 600,
+      baseDuration + Math.random() * 600
+    ];
+  }
   // Store random direction for each hand transition
   let angleDirections = [];
   let sweep360Arr = [];
@@ -290,12 +302,42 @@ function drawMatrix() {
     // c1, c2: [r,g,b]
     return `rgb(${Math.round(lerp(c1[0],c2[0],t))},${Math.round(lerp(c1[1],c2[1],t))},${Math.round(lerp(c1[2],c2[2],t))})`;
   }
+
+  // Easing functions
+  function elasticEaseOut(t) {
+    if (t === 0 || t === 1) return t;
+    const c4 = (2 * Math.PI) / 3;
+    return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+  }
+  function linearEase(t) {
+    return t;
+  }
   // Color definitions
   const color1 = [17,17,17]; // #111
   const color2 = [204,204,204]; // #ccc
   // Render function
   function renderFrame(now) {
-    let t = Math.min((now - start) / duration, 1);
+    // We'll use the max duration for the overall animation, but each hand will finish at its own time
+    let maxHandDuration = baseDuration + 600;
+    let t = Math.min((now - start) / maxHandDuration, 1);
+    // Easing mode checkbox logic
+    const easingCheckbox = document.getElementById('easingCheckbox');
+    // Restore easing checkbox state from localStorage
+    const savedEasing = localStorage.getItem('pixelMatrixEasingElastic');
+    if (savedEasing !== null) {
+      easingCheckbox.checked = savedEasing === 'true';
+    } else {
+      easingCheckbox.checked = true; // default to elastic
+    }
+    window.easingCheckbox = easingCheckbox;
+    easingCheckbox.addEventListener('change', () => {
+      localStorage.setItem('pixelMatrixEasingElastic', easingCheckbox.checked);
+      // Restart animation to apply new easing immediately
+      if (animationFrameId) {
+        // Force redraw at current state
+        if (typeof drawMatrix === 'function') drawMatrix();
+      }
+    });
     let svgContent = "";
     svgContent += `
       <rect
@@ -319,7 +361,9 @@ function drawMatrix() {
         const nextAngle = nextCell[idx];
         const prevStyle = prevCell[3] || 1;
         const nextStyle = nextCell[3] || 1;
-        const styleT = t;
+        // Per-hand progress and easing
+        let handT = Math.min((now - start) / handDurations[i][idx], 1);
+        let styleT = (window.easingCheckbox && window.easingCheckbox.checked) ? elasticEaseOut(handT) : linearEase(handT);
         let direction = angleDirections[i][idx];
         let angle;
         if (sweep360Arr[i]) {

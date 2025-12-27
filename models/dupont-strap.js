@@ -7,8 +7,7 @@ export default async function build(replicad) {
     // Parameters
     const pinCount = 7;           // Number of pins
     const pinSize = 2.6;          // Size of each pin housing (mm) - this determines spacing
-    const toleranceLength = 0.5;  // Additional tolerance for cavity length (mm) - total, not per pin
-    const toleranceWidth = 0.1;   // Additional tolerance for cavity width (mm)
+    const toleranceLength = 0.05;  // Additional tolerance for cavity length (mm) - total, not per pin -- when plugs are involved, I find that 0.5 works good. For no plugs, 0.05 works good.    const toleranceWidth = 0.1;   // Additional tolerance for cavity width (mm) -- 0.1 works good for all configurations
     const thickness = 0.8;        // Wall thickness (mm)
     const height = 9;             // Height of the strap (mm)
 
@@ -18,7 +17,7 @@ export default async function build(replicad) {
     const notchLength = 1;        // Length of the notch (mm) - extends outward on Y axis
 
     // Plug parameters (fill specific pins with solid blocks)
-    const isPlugged = [false, false, true, false, true, false, true];  // Array indicating which pins to fill
+    const isPlugged = [false, false, false, false, false, false, false];  // Array indicating which pins to fill
     const pinHoleDiameter = 1.5;  // Diameter of hole for male header pins (mm)
 
     // Calculate dimensions

@@ -25,26 +25,74 @@ export default async function build(replicad) {
     // Pin spacing is exact - no tolerance accumulation
     const pinSpacing = pinSize;  // Spacing between pin centers
 
-    // Inside cavity dimensions (for hollowing) - add tolerance to overall size
-    const cavityLength = (pinCount * pinSpacing) + toleranceLength;  // Y axis
-    const cavityWidth = pinSpacing + toleranceWidth;                 // X axis
+    // Base cavity dimensions (before tolerance)
+    const baseCavityLength = pinCount * pinSpacing;  // Y axis
+    const cavityWidth = pinSpacing + toleranceWidth;  // X axis
 
-    // Outside dimensions
-    const length = cavityLength + (thickness * 2);  // Y axis
-    const width = cavityWidth + (thickness * 2);    // X axis
+    // Outside dimensions - use base cavity length
+    const length = baseCavityLength + (thickness * 2);  // Y axis
+    const width = cavityWidth + (thickness * 2);        // X axis
 
     // Create outer rectangle
     const outerBox = drawRectangle(width, length)
         .sketchOnPlane()
         .extrude(height);
 
-    // Create inner cavity (hollow out for pins)
-    const innerCavity = drawRectangle(cavityWidth, cavityLength)
-        .sketchOnPlane()
-        .extrude(height);
+    // We'll build the cavity segments based on plug positions
+    // Start with the full outer box
+    let result = outerBox;
 
-    // Subtract inner cavity from outer box
-    let result = outerBox.cut(innerCavity);
+    // Create cavity segments and plugs
+    // We need to identify continuous cavity segments (non-plugged pins)
+    // and apply tolerance to each segment
+
+    for (let i = 0; i < pinCount; i++) {
+        const pinYOffset = (i - (pinCount - 1) / 2) * pinSpacing;
+        const isCurrentPlugged = isPlugged[i] && i < isPlugged.length;
+
+        if (isCurrentPlugged) {
+            // Create a plug for this pin
+            // Determine if we need to shrink the plug on each side for tolerance
+            const isPrevPlugged = i > 0 && isPlugged[i - 1];
+            const isNextPlugged = i < pinCount - 1 && isPlugged[i + 1];
+
+            // Calculate plug length adjustments
+            let plugLengthAdjustment = 0;
+            if (!isPrevPlugged) plugLengthAdjustment += toleranceLength / 2;  // Shrink from start
+            if (!isNextPlugged) plugLengthAdjustment += toleranceLength / 2;  // Shrink from end
+
+            const plugLength = pinSpacing - plugLengthAdjustment;
+
+            // Create a solid block for the plug
+            const plug = drawRectangle(pinSize, plugLength)
+                .sketchOnPlane()
+                .extrude(height)
+                .translate([0, pinYOffset, 0]);
+
+            // Fuse the plug with the main strap
+            result = result.fuse(plug);
+
+            // Create a hole through the plug for male header pins
+            // Cut it from the result after fusing to ensure the hole persists
+            const pinHole = drawCircle(pinHoleDiameter / 2)
+                .sketchOnPlane()
+                .extrude(height)
+                .translate([0, pinYOffset, 0]);
+
+            // Cut the hole from the result
+            result = result.cut(pinHole);
+        } else {
+            // Create a cavity for this pin
+            // The cavity gets the full pin spacing plus tolerance
+            const cavity = drawRectangle(cavityWidth, pinSpacing + toleranceLength)
+                .sketchOnPlane()
+                .extrude(height)
+                .translate([0, pinYOffset, 0]);
+
+            // Cut the cavity from the result
+            result = result.cut(cavity);
+        }
+    }
 
     // Add orientation notch if enabled
     if (hasNotch) {
@@ -58,33 +106,6 @@ export default async function build(replicad) {
         // Fuse the notch with the main strap
         result = result.fuse(notch);
     }
-
-    // Add plug solids for specified pins
-    isPlugged.forEach((plugged, index) => {
-        if (plugged && index < pinCount) {
-            // Calculate position for this pin
-            // Pins are centered and arranged along Y axis with exact spacing
-            const pinYOffset = (index - (pinCount - 1) / 2) * pinSpacing;
-
-            // Create a solid block the size of the pin
-            let plug = drawRectangle(pinSize, pinSize)
-                .sketchOnPlane()
-                .extrude(height)
-                .translate([0, pinYOffset, 0]);
-
-            // Create a hole through the plug for male header pins
-            const pinHole = drawCircle(pinHoleDiameter / 2)
-                .sketchOnPlane()
-                .extrude(height)
-                .translate([0, pinYOffset, 0]);
-
-            // Cut the hole from the plug
-            plug = plug.cut(pinHole);
-
-            // Fuse the plug with the main strap
-            result = result.fuse(plug);
-        }
-    });
 
     return result;
 }

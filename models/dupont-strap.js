@@ -5,9 +5,11 @@ export default async function build(replicad) {
     const { drawRectangle, drawCircle } = replicad;
 
     // Parameters
-    const pinCount = 7;           // Number of pins
+    let pinCount = 7;           // Number of pins
     const pinSize = 2.6;          // Size of each pin housing (mm) - this determines spacing
-    const toleranceLength = 0.05;  // Additional tolerance for cavity length (mm) - total, not per pin -- when plugs are involved, I find that 0.5 works good. For no plugs, 0.05 works good.    const toleranceWidth = 0.1;   // Additional tolerance for cavity width (mm) -- 0.1 works good for all configurations
+    let toleranceWidth = 0.05;  // Additional tolerance for cavity length (mm) - total, not per pin -- when plugs are involved, I find that 0.5 works good. For no plugs, 0.05 works good.    const toleranceWidth = 0.1;   // Additional tolerance for cavity width (mm) -- 0.1 works good for all configurations
+    let toleranceLength = 0.05;  // Additional tolerance for cavity length (mm) - total, not per pin -- when plugs are involved, I find that 0.5 works good. For no plugs, 0.05 works good.    const toleranceWidth = 0.1;   // Additional tolerance for cavity width (mm) -- 0.1 works good for all configurations
+    let isPlugged = [false, false, false, false, false, false, false];  // Array indicating which pins to fill
     const thickness = 0.8;        // Wall thickness (mm)
     const height = 9;             // Height of the strap (mm)
 
@@ -16,8 +18,37 @@ export default async function build(replicad) {
     const notchWidth = 2;         // Width of the notch (mm) - along X axis
     const notchLength = 1;        // Length of the notch (mm) - extends outward on Y axis
 
-    // Plug parameters (fill specific pins with solid blocks)
-    const isPlugged = [false, false, false, false, false, false, false];  // Array indicating which pins to fill
+    // Preset configurations
+    const Presets = {
+        P7_ALL_OPEN: {
+            pinCount: 7,
+            isPlugged: [false, false, false, false, false, false, false],
+            toleranceWidth: 0.05,
+            toleranceLength: 0.05
+        },
+        P9_1TO9: {
+            pinCount: 9,
+            isPlugged: [false, false, true, true, true, true, false, true, false],
+            toleranceWidth: 0.2,
+            toleranceLength: 0.35
+        },
+        P9_10TO18: {
+            pinCount: 9,
+            isPlugged: [true, true, true, false, false, false, true, true, true],
+            toleranceWidth: 0.2,
+            toleranceLength: 0.60
+        }
+    };
+
+    // Select which preset to use (IntelliSense will suggest available presets)
+    const presetToPrint = Presets.P9_10TO18;
+
+    // Apply preset configuration
+    pinCount = presetToPrint.pinCount;
+    isPlugged = presetToPrint.isPlugged;
+    toleranceWidth = presetToPrint.toleranceWidth;
+    toleranceLength = presetToPrint.toleranceLength;
+
     const pinHoleDiameter = 1.5;  // Diameter of hole for male header pins (mm)
 
     // Calculate dimensions

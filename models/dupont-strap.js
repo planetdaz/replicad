@@ -23,8 +23,8 @@ export default async function build(replicad) {
         P7_ALL_OPEN: {
             pinCount: 7,
             isPlugged: [false, false, false, false, false, false, false],
-            toleranceWidth: 0.05,
-            toleranceLength: 0.05
+            toleranceWidth: 0.1,
+            toleranceLength: 0.15
         },
         P9_1TO9: {
             pinCount: 9,
@@ -41,7 +41,7 @@ export default async function build(replicad) {
     };
 
     // Select which preset to use (IntelliSense will suggest available presets)
-    const presetToPrint = Presets.P9_10TO18;
+    const presetToPrint = Presets.P7_ALL_OPEN;
 
     // Apply preset configuration
     pinCount = presetToPrint.pinCount;

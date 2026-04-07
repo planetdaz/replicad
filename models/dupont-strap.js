@@ -24,7 +24,7 @@ export default async function build(replicad) {
             pinCount: 7,
             isPlugged: [false, false, false, false, false, false, false],
             toleranceWidth: 0.1,
-            toleranceLength: 0.15
+            toleranceLength: 0.60
         },
         P9_1TO9: {
             pinCount: 9,
